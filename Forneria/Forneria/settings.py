@@ -77,8 +77,12 @@ WSGI_APPLICATION = 'Forneria.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',   # Cambiamos el motor a MySQL
+        'NAME': 'Forneria',            # Nombre de tu base de datos
+        'USER': 'Alucard',                # Usuario de MySQL
+        'PASSWORD': 'belmont',            # Contraseña del usuario
+        'HOST': 'localhost',                    # Servidor (localhost si es local)
+        'PORT': '3306',                         # Puerto por defecto de MySQL
     }
 }
 
