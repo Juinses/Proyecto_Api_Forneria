@@ -1,0 +1,28 @@
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+# Solo usuarios autenticados
+@login_required
+def lista_ventas(request):
+    # lógica aquí
+    pass
+
+# Solo admin
+@user_passes_test(lambda u: u.is_superuser)
+def eliminar_producto(request, pk):
+    # lógica aquí
+    pass
+
+# Solo vendedores (grupo)
+@user_passes_test(lambda u: u.groups.filter(name='Vendedor').exists())
+def crear_venta(request):
+    # lógica aquí
+    pass
+
+
+from django.contrib.auth import views as auth_views
+
+urlpatterns = [
+    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+]
