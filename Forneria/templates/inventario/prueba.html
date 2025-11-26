@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- ================================
+     ESTILOS Y FONDO
+==================================== -->
+<link rel="stylesheet" href="{% static 'css/inventario.css' %}">
+<style>
+  html, body { height:100%; min-height:100vh; margin:0; padding:0; }
+  body {
+    /* Fondo doble (tu configuración original) */
+    background-image: url("{% static 'images/fondo_lafornería.jpg' %}"), url("{% static 'images/fondo_lafornería.jpg' %}");
+    background-size: cover, cover;
+    background-position: top center, top center;
+    background-repeat: no-repeat, no-repeat;
+    background-attachment: fixed, fixed;
+    background-color: #111;
+  }
+  .confirm-card, .card { background: rgba(255,255,255,0.92); }
+</style>
+
+<!-- =========================================
+     CONTAINER PRINCIPAL
+     Row → 12 columnas (recomendación profesor)
+========================================= -->
+<div class="container-fluid mt-4">
+  <div class="row">
+
+    <!-- =============================
+         SUB-ROW PRINCIPAL
+         Col-4 (Control Inventario)
+         Col-8 (Vista derecha)
+    ============================== -->
+    <div class="row">
+
+      <!-- ============================
+           COLUMNA IZQUIERDA (4 cols)
+           FORMULARIO DE MOVIMIENTOS
+      ============================= -->
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-body">
+
+            <!-- Título + botón -->
+            <div class="d-flex align-items-start">
+              <h5 class="card-title me-auto">Control de Inventario</h5>
+              <a href="{% url 'pos_ventas' %}" class="btn btn-sm btn-success">Ir a Ventas</a>
+            </div>
+
+            <p class="text-muted small">Registra ingresos y egresos de stock</p>
+
+            {% if message %}
+              <div class="alert alert-success">{{ message }}</div>
+            {% endif %}
+
+            <!-- FORMULARIO DE MOVIMIENTO -->
+            <form id="inventory-form" method="post">
+              {% csrf_token %}
+
+              <!-- BUSCADOR DE PRODUCTO -->
+              <div class="mb-3">
+                <label class="form-label">Buscar producto</label>
+
+                <!-- Input para filtrar (front-end) -->
+                <input id="product-search" class="form-control" placeholder="🔍 Buscar producto">
+
+                <!-- Select original (Django) -->
+                <select name="producto_id" id="producto-select" class="form-select mt-2">
+                  <option value="">-- selecciona --</option>
+                  {% for p in productos %}
+                    <option value="{{ p.pk }}">
+                      {{ p.nombre }} (stock: {{ p.stock_actual|default:0 }})
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Fila interna col/col (recomendación profesor) -->
+              <div class="row">
+                <div class="col-6 mb-3">
+                  <label class="form-label">Acción</label>
+                  <select name="action" class="form-select">
+                    <option value="ingreso">Ingreso</option>
+                    <option value="egreso">Egreso</option>
+                  </select>
+                </div>
+                <div class="col-6 mb-3">
+                  <label class="form-label">Cantidad</label>
+                  <input name="cantidad" type="number" min="1" value="1" class="form-control">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Proveedor (opcional)</label>
+                <input name="proveedor" class="form-control">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Documento / Nº (opcional)</label>
+                <input name="documento" class="form-control">
+              </div>
+
+              <div class="mb-3 d-grid">
+                <button id="submit-inventory" class="btn btn-primary">
+                  Registrar movimiento
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- =============================
+           COLUMNA DERECHA (8 cols)
+           - LISTA DE PRODUCTOS (NUEVO)
+           - MOVIMIENTOS RECIENTES
+      ============================== -->
+      <div class="col-lg-8">
+
+        {% if low_stock.exists %}
+          <div class="alert alert-warning">
+            Hay productos con stock por debajo del mínimo.
+          </div>
+        {% endif %}
+
+        <!-- =================================
+             LISTADO DE PRODUCTOS (NUEVO)
+        ================================== -->
+        <div class="card mb-3">
+          <div class="card-body">
+
+            <h5 class="card-title">Listado de productos</h5>
+
+            <!-- LISTA: Tarjetas con foto -->
+            <div class="row">
+
+              {% for prod in productos %}
+              <div class="col-md-6 mb-3">
+                <div class="card p-2">
+
+                  <div class="d-flex">
+
+                    <!-- FOTO DEL PRODUCTO -->
+                    <img src="{{ prod.foto.url }}" 
+                         class="me-2"
+                         style="width:70px; height:70px; object-fit:cover; border-radius:4px;">
+
+                    <!-- DATOS -->
+                    <div class="flex-grow-1">
+                      <strong>{{ prod.pk }} — {{ prod.nombre }}</strong><br>
+                      <span class="text-muted small">
+                        Precio: {{ prod.precio }}<br>
+                        Proveedor: {{ prod.proveedor }}<br>
+                        {{ prod.descripcion }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Acciones -->
+                  <div class="mt-2 d-flex justify-content-between">
+                    <button class="btn btn-sm btn-warning">Modificar</button>
+                    <button class="btn btn-sm btn-danger">Eliminar</button>
+                    <button class="btn btn-sm btn-primary">Registrar</button>
+                  </div>
+
+                </div>
+              </div>
+              {% empty %}
+                <p class="text-muted small">No hay productos registrados.</p>
+              {% endfor %}
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- =============================
+             MOVIMIENTOS RECIENTES
+        ============================== -->
+        <div class="card movimientos-card">
+          <div class="card-body">
+            <h5 class="card-title">Movimientos recientes</h5>
+
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Tipo</th>
+                  </tr>
+                </thead>
+                <tbody id="movimientos-body">
+                  {% for m in movimientos %}
+                  <tr>
+                    <td>{{ m.fecha }}</td>
+                    <td>{{ m.productos.nombre }}</td>
+                    <td>{{ m.cantidad }}</td>
+                    <td>
+                      {% if m.tipo_movimiento == 'ingreso' %}
+                        <i class="bi bi-box-arrow-in-right text-success"></i>
+                      {% else %}
+                        <i class="bi bi-box-arrow-left text-warning"></i>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="4" class="text-center small text-muted">
+                      No hay movimientos registrados.
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Paginación -->
+            <nav class="mt-2">
+              <ul class="pagination pagination-sm">
+
+                {% if movimientos.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ movimientos.previous_page_number }}">
+                      &laquo;
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                  </li>
+                {% endif %}
+
+                <li class="page-item disabled">
+                  <span class="page-link">
+                    Página {{ movimientos.number }} de {{ movimientos.paginator.num_pages }}
+                  </span>
+                </li>
+
+                {% if movimientos.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ movimientos.next_page_number }}">
+                      &raquo;
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                  </li>
+                {% endif %}
+
+              </ul>
+            </nav>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- JS original -->
+<script src="{% static 'js/inventario.js' %}"></script>
+
+{% endblock %}
