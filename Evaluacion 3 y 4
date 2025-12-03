@@ -1,0 +1,37 @@
+3Ta
+
+interfaces = necesidades del negocio 
+" esteticas y funcionales
+
+Bd normalizadas
+pratones de seguridad aplicados
+colaboracion equipo (git)
+configuracion de implementacion
+plan de pruebas
+
+Interfaces (App 80%)
+
+                      Interfaces,diseño
+App                   Func 80%
+                      BD -----> Eficientes y Normalizados
+                      Seguridad
+
+                      Git
+Equipo                Impementacion
+                                            Elaboracion
+                      Plan Pruebas          Ejecuccion
+                                            Validacion resultados
+                                            Recomendaciones y Sugerencias
+4ta
+
+Documentacion Final
+Funcionalidad y caracteristicas del proyecto
+
+                        Correctivo
+Plan mantenimiento      Adaptativo
+                        Preventivo
+                        Perfectivo
+
+Presentacion
+Exposicion
+Defensa
