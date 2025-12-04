@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import Productos, Categorias
+from .models import Productos, Categorias, MovimientosInventario
 from .forms import ProductoForm
+from datetime import datetime
 
 # =========================
 # Funciones para roles
@@ -99,5 +100,46 @@ def editar_producto(request, pk):
 @user_passes_test(es_admin)
 def eliminar_producto(request, pk):
     producto = get_object_or_404(Productos, pk=pk)
-    producto.delete()
-    return redirect('lista_productos')
+    if request.method == 'POST':
+        producto.delete()
+        return redirect('lista_productos')
+    return render(request, 'inventario/confirmar_eliminar.html', {'producto': producto})
+
+# =========================
+# MOVIMIENTOS DE INVENTARIO
+# Solo admin puede registrar movimientos
+# =========================
+@login_required
+@user_passes_test(es_admin)
+def movimientos_inventario(request):
+    if request.method == 'POST':
+        producto_id = request.POST.get('producto_id')
+        action = request.POST.get('action')
+        cantidad = int(request.POST.get('cantidad', 0))
+
+        if producto_id and cantidad > 0:
+            producto = get_object_or_404(Productos, pk=producto_id)
+            
+            # Registrar el movimiento
+            MovimientosInventario.objects.create(
+                productos=producto,
+                tipo_movimiento=action,
+                cantidad=cantidad,
+                fecha=datetime.now()
+            )
+
+            # Actualizar stock
+            if action == 'ingreso':
+                producto.stock_actual += cantidad
+            elif action == 'egreso':
+                producto.stock_actual -= cantidad
+            producto.save()
+
+        return redirect('movimientos_inventario')
+
+    productos = Productos.objects.all()
+    movimientos = MovimientosInventario.objects.order_by('-fecha')[:10]
+    return render(request, 'inventario/movimientos.html', {
+        'productos': productos,
+        'movimientos': movimientos
+    })

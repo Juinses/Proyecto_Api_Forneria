@@ -1,129 +1,7 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block content %}
-
-<link
-  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-  rel="stylesheet"
-/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-
-<style>
-  html, body { height:100%; min-height:100vh; margin:0; padding:0; }
-
-  body {
-    background-image: url("{% static 'images/fondo_lafornería.jpg' %}"),
-                      url("{% static 'images/fondo_lafornería.jpg' %}");
-    background-size: cover, cover;
-    background-repeat: no-repeat, no-repeat;
-    background-position: top center, top center;
-    background-attachment: fixed, fixed;
-    background-color: #111;
-  }
-
-  .product-card { cursor:pointer; transition:0.1s; }
-  .product-card:hover { transform: scale(1.02); box-shadow:0 0.25rem 0.5rem rgba(0,0,0,.1); }
-  .ticket-sidebar { background:#fff; border-radius:.75rem; box-shadow:0 0.25rem 0.5rem rgba(0,0,0,.1); }
-  .vh-90 { height:90vh; }
-  .category-btn.active { background:#198754; color:#fff; }
-</style>
-
-<div class="p-3">
-
-<!-- 🟦 Encabezado superior -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h3><i class="bi bi-shop"></i> La Fornería · POS</h3>
-  <div>
-    <b>Fecha:</b> <span id="fecha"></span> |
-    <b>Hora:</b> <span id="hora"></span> |
-  </div>
-</div>
-
-<div class="row">
-
-  <!-- 🟩 Productos -->
-  <div class="col-lg-8">
-
-      <!-- Buscador -->
-      <div class="input-group mb-3">
-          <span class="input-group-text"><i class="bi bi-search"></i></span>
-          <input id="search" type="text" class="form-control" placeholder="Buscar producto...">
-      </div>
-
-      <!-- Código -->
-      <div class="input-group mb-3">
-          <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
-          <input id="codigoInput" type="text" class="form-control" placeholder="Código del producto">
-          <button class="btn btn-primary" id="btnBuscarCodigo">Agregar</button>
-      </div>
-
-      <div class="row g-3" id="product-list"></div>
-  </div>
-
-  <!-- 🟥 Carrito -->
-  <div class="col-lg-4">
-      <div class="ticket-sidebar p-3">
-
-          <h4 class="mb-3">Carrito</h4>
-
-          <table class="table table-sm">
-              <thead>
-                  <tr>
-                      <th>Código</th>
-                      <th>Nombre</th>
-                      <th>Cant.</th>
-                      <th>Subt.</th>
-                      <th></th>
-                  </tr>
-              </thead>
-              <tbody id="carritoBody"></tbody>
-          </table>
-
-          <hr>
-
-          <div><b>Neto:</b> $<span id="neto">0</span></div>
-          <div><b>IVA (19%):</b> $<span id="iva">0</span></div>
-          <div class="fs-4"><b>Total:</b> $<span id="total">0</span></div>
-
-          <hr>
-
-          <h5>Método de pago</h5>
-          <select class="form-select mb-2" id="metodoPago">
-              <option value="efectivo">Efectivo</option>
-              <option value="debito">Débito</option>
-              <option value="credito">Crédito</option>
-              <option value="mixto">Mixto</option>
-          </select>
-
-          <div id="montosPago">
-              <input type="number" id="montoEfectivo" class="form-control mb-2 d-none" placeholder="Monto en efectivo">
-              <input type="number" id="montoDebito" class="form-control mb-2 d-none" placeholder="Monto en débito">
-              <input type="number" id="montoCredito" class="form-control mb-2 d-none" placeholder="Monto en crédito">
-          </div>
-
-          <button class="btn btn-success w-100 mt-3" id="btnPagar">
-              <i class="bi bi-cash-coin"></i> Pagar
-          </button>
-
-      </div>
-  </div>
-
-</div>
-</div>
-<!-- ✔ Scripts de Bootstrap -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-
-<script>
-// 🟢 LISTA DE PRODUCTOS (simulación sin backend)
-const productos = [
-    {codigo:"101", nombre:"Pancito", precio:1200},
-    {codigo:"102", nombre:"Hallulla", precio:700},
-    {codigo:"103", nombre:"Focaccia", precio:1500},
-    {codigo:"104", nombre:"Ciabatta", precio:1400},
-    {codigo:"345", nombre:"Coca-Cola", precio:2900}
-];
+// 🟢 Leer productos desde el JSON embutido en el HTML
+const productosDataElement = document.getElementById("productos-data");
+const rawProductos = JSON.parse(productosDataElement.textContent);
+const productos = rawProductos.map(p => p.fields);
 
 // ✔ Referencias a elementos HTML
 const productList = document.getElementById("product-list");
@@ -276,15 +154,56 @@ function actualizarCamposPago(){
 }
 actualizarCamposPago();
 
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 
-// 🟢 BOTÓN PAGAR (solo front-end)
+// 🟢 BOTÓN PAGAR
+const crearVentaUrl = document.getElementById('ventas-js').getAttribute('data-url-crear-venta');
+
+const listaVentasUrl = document.getElementById('ventas-js').getAttribute('data-url-lista-ventas');
+
 document.getElementById("btnPagar").onclick = () => {
     if(carrito.length === 0){
         alert("El carrito está vacío");
         return;
     }
-    alert("Pago registrado (solo front-end)");
-};
-</script>
+    
+    const data = {
+        carrito: carrito,
+        cliente_id: 1 // Cliente "Varios"
+    };
 
-{% endblock %}
+    fetch(crearVentaUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.status === 'success'){
+            alert("Venta registrada con éxito!");
+            window.location.href = listaVentasUrl;
+        } else {
+            alert("Error al registrar la venta: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Ocurrió un error inesperado.");
+    });
+};

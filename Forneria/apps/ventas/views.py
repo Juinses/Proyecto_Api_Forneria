@@ -1,9 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 import tempfile
+import json
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.serializers import serialize
+
 
 from .models import Ventas, Clientes, DetalleVenta
 from apps.inventario.models import Productos
@@ -28,52 +31,52 @@ def es_admin(user):
 @transaction.atomic
 def crear_venta(request):
     if request.method == 'POST':
-        venta_form = VentaForm(request.POST)
-        detalle_form = DetalleVentaForm(request.POST)
+        try:
+            data = json.loads(request.body)
+            cliente_id = data.get('cliente_id', 1) # Usar cliente "Varios" por defecto
+            carrito = data.get('carrito', [])
 
-        if venta_form.is_valid() and detalle_form.is_valid():
-            venta = venta_form.save(commit=False)
+            if not carrito:
+                return JsonResponse({'status': 'error', 'message': 'El carrito está vacío'}, status=400)
 
-            cantidad = detalle_form.cleaned_data['cantidad']
-            producto = detalle_form.cleaned_data['productos']
-            precio_unitario = detalle_form.cleaned_data['precio_unitario']
-            descuento_pct = detalle_form.cleaned_data.get('descuento_pct', 0)
+            cliente = get_object_or_404(Clientes, pk=cliente_id)
+            
+            # Calcular totales
+            neto = sum(item['precio'] * item['cantidad'] for item in carrito)
+            iva = round(neto * 0.19)
+            total = neto + iva
 
-            if cantidad > producto.stock_actual:
-                venta_form.add_error(None, f"Stock insuficiente para {producto.nombre}")
-                return render(request, 'ventas/form.html', {
-                    'venta_form': venta_form,
-                    'detalle_form': detalle_form
-                })
+            venta = Ventas.objects.create(
+                clientes=cliente,
+                total_sin_iva=neto,
+                total_iva=iva,
+                total_con_iva=total,
+                monto_pagado=total, # Asumir pago completo por ahora
+                vuelto=0
+            )
 
-            subtotal = cantidad * precio_unitario
-            total_sin_iva = subtotal
-            total_iva = round(total_sin_iva * 0.19, 2)
-            descuento = round((subtotal * descuento_pct) / 100, 2)
-            total_con_iva = total_sin_iva + total_iva - descuento
+            for item in carrito:
+                producto = get_object_or_404(Productos, codigo=item['codigo'])
+                if item['cantidad'] > producto.stock_actual:
+                    raise Exception(f"Stock insuficiente para {producto.nombre}")
 
-            venta.total_sin_iva = total_sin_iva
-            venta.total_iva = total_iva
-            venta.descuento = descuento
-            venta.total_con_iva = total_con_iva
-            venta.save()
+                DetalleVenta.objects.create(
+                    ventas=venta,
+                    productos=producto,
+                    cantidad=item['cantidad'],
+                    precio_unitario=item['precio']
+                )
+                producto.stock_actual -= item['cantidad']
+                producto.save()
 
-            detalle = detalle_form.save(commit=False)
-            detalle.ventas = venta
-            detalle.save()
+            return JsonResponse({'status': 'success', 'venta_id': venta.id})
 
-            producto.stock_actual -= cantidad
-            producto.save()
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-            return redirect('lista_ventas')
-    else:
-        venta_form = VentaForm()
-        detalle_form = DetalleVentaForm()
-
-    return render(request, 'ventas/form.html', {
-        'venta_form': venta_form,
-        'detalle_form': detalle_form
-    })
+    productos = Productos.objects.filter(stock_actual__gt=0)
+    productos_json = serialize('json', productos, fields=('codigo', 'nombre', 'precio'))
+    return render(request, 'ventas/form.html', {'productos_json': productos_json})
 
 
 # =========================
@@ -92,59 +95,31 @@ def lista_ventas(request):
 @transaction.atomic
 def editar_venta(request, venta_id):
     venta = get_object_or_404(Ventas, pk=venta_id)
-    detalle = DetalleVenta.objects.filter(ventas=venta).first()
-
+    
     if request.method == 'POST':
-        venta_form = VentaForm(request.POST, instance=venta)
-        detalle_form = DetalleVentaForm(request.POST, instance=detalle)
+        # La edición desde el POS implicaría una lógica más compleja
+        # Por ahora, redirigimos a la lista
+        return redirect('lista_ventas')
 
-        if venta_form.is_valid() and detalle_form.is_valid():
-            venta = venta_form.save(commit=False)
-
-            cantidad = detalle_form.cleaned_data['cantidad']
-            producto = detalle_form.cleaned_data['productos']
-            precio_unitario = detalle_form.cleaned_data['precio_unitario']
-            descuento_pct = detalle_form.cleaned_data.get('descuento_pct', 0)
-
-            # Validar stock
-            if cantidad > producto.stock_actual + detalle.cantidad:
-                venta_form.add_error(None, f"Stock insuficiente para {producto.nombre}")
-                return render(request, 'ventas/form.html', {
-                    'venta_form': venta_form,
-                    'detalle_form': detalle_form
-                })
-
-            subtotal = cantidad * precio_unitario
-            total_sin_iva = subtotal
-            total_iva = round(total_sin_iva * 0.19, 2)
-            descuento = round((subtotal * descuento_pct) / 100, 2)
-            total_con_iva = total_sin_iva + total_iva - descuento
-
-            venta.total_sin_iva = total_sin_iva
-            venta.total_iva = total_iva
-            venta.descuento = descuento
-            venta.total_con_iva = total_con_iva
-            venta.save()
-
-            detalle = detalle_form.save(commit=False)
-            detalle.ventas = venta
-            detalle.save()
-
-            # Actualizar stock
-            diferencia = cantidad - detalle.cantidad
-            producto.stock_actual -= diferencia
-            producto.save()
-
-            return redirect('lista_ventas')
-    else:
-        venta_form = VentaForm(instance=venta)
-        detalle_form = DetalleVentaForm(instance=detalle)
-
+    productos = Productos.objects.filter(stock_actual__gt=0)
+    productos_json = serialize('json', productos, fields=('codigo', 'nombre', 'precio'))
+    
+    detalles = DetalleVenta.objects.filter(ventas=venta)
+    carrito = []
+    for d in detalles:
+        carrito.append({
+            'codigo': d.productos.codigo,
+            'nombre': d.productos.nombre,
+            'precio': float(d.precio_unitario),
+            'cantidad': d.cantidad
+        })
+    
     return render(request, 'ventas/form.html', {
-        'venta_form': venta_form,
-        'detalle_form': detalle_form,
-        'editar': True
+        'productos_json': productos_json,
+        'venta': venta,
+        'carrito_json': json.dumps(carrito)
     })
+
 
 # =========================
 # Eliminar VENTAS

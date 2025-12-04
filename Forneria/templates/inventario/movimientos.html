@@ -7,19 +7,6 @@
      ESTILOS Y FONDO
 ==================================== -->
 <link rel="stylesheet" href="{% static 'css/inventario.css' %}">
-<style>
-  html, body { height:100%; min-height:100vh; margin:0; padding:0; }
-  body {
-    /* Fondo doble (tu configuración original) */
-    background-image: url("{% static 'images/fondo_lafornería.jpg' %}"), url("{% static 'images/fondo_lafornería.jpg' %}");
-    background-size: cover, cover;
-    background-position: top center, top center;
-    background-repeat: no-repeat, no-repeat;
-    background-attachment: fixed, fixed;
-    background-color: #111;
-  }
-  .confirm-card, .card { background: rgba(255,255,255,0.92); }
-</style>
 
 <!-- =========================================
      CONTAINER PRINCIPAL
@@ -46,7 +33,7 @@
             <!-- Título + botón -->
             <div class="d-flex align-items-start">
               <h5 class="card-title me-auto">Control de Inventario</h5>
-              <a href="{% url 'pos_ventas' %}" class="btn btn-sm btn-success">Ir a Ventas</a>
+              <a href="{% url 'lista_productos' %}" class="btn btn-sm btn-success">Ir a Productos</a>
             </div>
 
             <p class="text-muted small">Registra ingresos y egresos de stock</p>
@@ -115,67 +102,9 @@
 
       <!-- =============================
            COLUMNA DERECHA (8 cols)
-           - LISTA DE PRODUCTOS (NUEVO)
            - MOVIMIENTOS RECIENTES
       ============================== -->
       <div class="col-lg-8">
-
-        {% if low_stock.exists %}
-          <div class="alert alert-warning">
-            Hay productos con stock por debajo del mínimo.
-          </div>
-        {% endif %}
-
-        <!-- =================================
-             LISTADO DE PRODUCTOS (NUEVO)
-        ================================== -->
-        <div class="card mb-3">
-          <div class="card-body">
-
-            <h5 class="card-title">Listado de productos</h5>
-
-            <!-- LISTA: Tarjetas con foto -->
-            <div class="row">
-
-              {% for prod in productos %}
-              <div class="col-md-6 mb-3">
-                <div class="card p-2">
-
-                  <div class="d-flex">
-
-                    <!-- FOTO DEL PRODUCTO -->
-                    <img src="{{ prod.foto.url }}" 
-                         class="me-2"
-                         style="width:70px; height:70px; object-fit:cover; border-radius:4px;">
-
-                    <!-- DATOS -->
-                    <div class="flex-grow-1">
-                      <strong>{{ prod.pk }} — {{ prod.nombre }}</strong><br>
-                      <span class="text-muted small">
-                        Precio: {{ prod.precio }}<br>
-                        Proveedor: {{ prod.proveedor }}<br>
-                        {{ prod.descripcion }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- Acciones -->
-                  <div class="mt-2 d-flex justify-content-between">
-                    <button class="btn btn-sm btn-warning">Modificar</button>
-                    <button class="btn btn-sm btn-danger">Eliminar</button>
-                    <button class="btn btn-sm btn-primary">Registrar</button>
-                  </div>
-
-                </div>
-              </div>
-              {% empty %}
-                <p class="text-muted small">No hay productos registrados.</p>
-              {% endfor %}
-
-            </div>
-
-          </div>
-        </div>
 
         <!-- =============================
              MOVIMIENTOS RECIENTES
