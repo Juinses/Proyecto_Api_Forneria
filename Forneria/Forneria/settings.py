@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'Forneria.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',   # Cambiamos el motor a MySQL
-        'NAME': 'Forneria',            # Nombre de tu base de datos
+        'NAME': 'forneria',            # Nombre de tu base de datos
         'USER': 'Alucard',                # Usuario de MySQL
         'PASSWORD': 'belmont',            # Contraseña del usuario
         'HOST': 'localhost',                    # Servidor (localhost si es local)

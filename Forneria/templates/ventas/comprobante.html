@@ -1,0 +1,102 @@
+{% load ventas_extras %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Comprobante de Venta #{{ venta.id }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: auto; border: 1px solid #eee; padding: 20px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; }
+        .header p { margin: 5px 0; }
+        .details, .items, .totals { width: 100%; margin-bottom: 20px; }
+        .details table, .items table, .totals table { width: 100%; border-collapse: collapse; }
+        .details th, .details td { padding: 8px; text-align: left; }
+        .items th, .items td { padding: 8px; border-bottom: 1px solid #ddd; }
+        .items th { background-color: #f2f2f2; }
+        .totals { float: right; width: auto; }
+        .totals th, .totals td { padding: 8px; text-align: right; }
+        .totals th { width: 60%; }
+        .footer { text-align: center; margin-top: 30px; font-size: 0.9em; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Fornería</h1>
+            <p>Comprobante de Venta</p>
+            <p>Folio: {{ venta.folio|default:"N/A" }}</p>
+        </div>
+
+        <div class="details">
+            <table>
+                <tr>
+                    <th>Fecha:</th>
+                    <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                </tr>
+                <tr>
+                    <th>Cliente:</th>
+                    <td>{{ venta.clientes.nombre }} ({{ venta.clientes.rut|default:"Sin RUT" }})</td>
+                </tr>
+                 <tr>
+                    <th>Email:</th>
+                    <td>{{ venta.clientes.correo|default:"N/A" }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="items">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unit.</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in detalles %}
+                    <tr>
+                        <td>{{ detalle.productos.nombre }}</td>
+                        <td>{{ detalle.cantidad }}</td>
+                        <td>${{ detalle.precio_unitario|floatformat:2 }}</td>
+                        <td>${{ detalle.precio_unitario|mul:detalle.cantidad|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="totals">
+            <table>
+                <tr>
+                    <th>Subtotal:</th>
+                    <td>${{ venta.total_sin_iva|floatformat:2 }}</td>
+                </tr>
+                 <tr>
+                    <th>Descuento:</th>
+                    <td>-${{ venta.descuento|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <th>IVA (19%):</th>
+                    <td>${{ venta.total_iva|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <th><strong>Total Pagado:</strong></th>
+                    <td><strong>${{ venta.total_con_iva|floatformat:2 }}</strong></td>
+                </tr>
+            </table>
+        </div>
+        <div style="clear: both;"></div>
+        <div class="footer">
+            <p>¡Gracias por tu compra!</p>
+        </div>
+    </div>
+</body>
+</html>
+{% comment %} 
+This template doesn't extend base.html because it's also used for PDF generation,
+where we need a plain, self-contained HTML document.
+{% endcomment %}

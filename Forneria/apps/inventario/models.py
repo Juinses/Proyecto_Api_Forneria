@@ -1,6 +1,25 @@
 from django.db import models
 
 
+class Categorias(models.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+    descripcion = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        db_table = 'categorias'   # nombre de la tabla en la BD
+
+class Nutricional(models.Model):
+    calorias = models.IntegerField(blank=True, null=True)
+    proteinas = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    grasas = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    carbohidratos = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    azucares = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    sodio = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+
+    class Meta:
+        db_table = 'nutricional'
+
+
 class Productos(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.CharField(max_length=300, blank=True, null=True)
@@ -14,32 +33,20 @@ class Productos(models.Model):
     stock_maximo = models.IntegerField(blank=True, null=True)
     presentacion = models.CharField(max_length=100, blank=True, null=True)
     formato = models.CharField(max_length=100, blank=True, null=True)
-    creado = models.DateTimeField(blank=True, null=True)
-    modificado = models.DateTimeField(blank=True, null=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    modificado = models.DateTimeField(auto_now=True)
     eliminado = models.DateTimeField(blank=True, null=True)
-    categorias = models.ForeignKey('Categorias', models.DO_NOTHING)
-    nutricional = models.ForeignKey('Nutricional', models.DO_NOTHING)
-
+    categorias = models.ForeignKey(Categorias, on_delete=models.CASCADE)
+    nutricional = models.ForeignKey(Nutricional, on_delete=models.CASCADE)
     class Meta:
-        managed = False
         db_table = 'productos'
-
-
-class Categorias(models.Model):
-    nombre = models.CharField(max_length=100, blank=True, null=True)
-    descripcion = models.CharField(max_length=200, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'categorias'
 
 
 class MovimientosInventario(models.Model):
     tipo_movimiento = models.CharField(max_length=7)
     cantidad = models.IntegerField()
     fecha = models.DateTimeField()
-    productos = models.ForeignKey(Productos, models.DO_NOTHING)
+    productos = models.ForeignKey(Productos, on_delete=models.CASCADE)
 
     class Meta:
-        managed = False
         db_table = 'movimientos_inventario'

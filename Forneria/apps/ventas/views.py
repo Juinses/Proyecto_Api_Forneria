@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from weasyprint import HTML
 import tempfile
 from django.contrib.auth.decorators import login_required, user_passes_test
 
@@ -78,6 +77,99 @@ def crear_venta(request):
 
 
 # =========================
+# LISTAR VENTAS
+# =========================
+@login_required
+def lista_ventas(request):
+    ventas = Ventas.objects.all().order_by('-fecha')
+    return render(request, 'ventas/lista_ventas.html', {'ventas': ventas})
+
+# =========================
+# Editar VENTAS
+# =========================
+@login_required
+@user_passes_test(lambda u: es_vendedor(u) or es_admin(u))
+@transaction.atomic
+def editar_venta(request, venta_id):
+    venta = get_object_or_404(Ventas, pk=venta_id)
+    detalle = DetalleVenta.objects.filter(ventas=venta).first()
+
+    if request.method == 'POST':
+        venta_form = VentaForm(request.POST, instance=venta)
+        detalle_form = DetalleVentaForm(request.POST, instance=detalle)
+
+        if venta_form.is_valid() and detalle_form.is_valid():
+            venta = venta_form.save(commit=False)
+
+            cantidad = detalle_form.cleaned_data['cantidad']
+            producto = detalle_form.cleaned_data['productos']
+            precio_unitario = detalle_form.cleaned_data['precio_unitario']
+            descuento_pct = detalle_form.cleaned_data.get('descuento_pct', 0)
+
+            # Validar stock
+            if cantidad > producto.stock_actual + detalle.cantidad:
+                venta_form.add_error(None, f"Stock insuficiente para {producto.nombre}")
+                return render(request, 'ventas/form.html', {
+                    'venta_form': venta_form,
+                    'detalle_form': detalle_form
+                })
+
+            subtotal = cantidad * precio_unitario
+            total_sin_iva = subtotal
+            total_iva = round(total_sin_iva * 0.19, 2)
+            descuento = round((subtotal * descuento_pct) / 100, 2)
+            total_con_iva = total_sin_iva + total_iva - descuento
+
+            venta.total_sin_iva = total_sin_iva
+            venta.total_iva = total_iva
+            venta.descuento = descuento
+            venta.total_con_iva = total_con_iva
+            venta.save()
+
+            detalle = detalle_form.save(commit=False)
+            detalle.ventas = venta
+            detalle.save()
+
+            # Actualizar stock
+            diferencia = cantidad - detalle.cantidad
+            producto.stock_actual -= diferencia
+            producto.save()
+
+            return redirect('lista_ventas')
+    else:
+        venta_form = VentaForm(instance=venta)
+        detalle_form = DetalleVentaForm(instance=detalle)
+
+    return render(request, 'ventas/form.html', {
+        'venta_form': venta_form,
+        'detalle_form': detalle_form,
+        'editar': True
+    })
+
+# =========================
+# Eliminar VENTAS
+# =========================
+@login_required
+@user_passes_test(lambda u: es_vendedor(u) or es_admin(u))
+@transaction.atomic
+def eliminar_venta(request, venta_id):
+    venta = get_object_or_404(Ventas, pk=venta_id)
+    detalles = DetalleVenta.objects.filter(ventas=venta)
+
+    if request.method == 'POST':
+        # Devolver stock antes de eliminar
+        for detalle in detalles:
+            producto = detalle.productos
+            producto.stock_actual += detalle.cantidad
+            producto.save()
+
+        venta.delete()
+        return redirect('lista_ventas')
+
+    return render(request, 'ventas/confirmar_eliminar.html', {'venta': venta})
+
+
+# =========================
 # VISTA PARA MOSTRAR COMPROBANTE EN HTML
 # Solo usuarios autenticados
 # =========================
@@ -95,8 +187,13 @@ def comprobante_html(request, venta_id):
 # VISTA PARA GENERAR PDF DEL COMPROBANTE
 # Solo usuarios autenticados
 # =========================
+from .models import Ventas, DetalleVenta
+
 @login_required
 def comprobante_pdf(request, venta_id):
+    # Importar WeasyPrint solo aquí
+    from weasyprint import HTML
+
     venta = get_object_or_404(Ventas, pk=venta_id)
     detalles = DetalleVenta.objects.filter(ventas=venta)
 
