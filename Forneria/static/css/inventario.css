@@ -1,0 +1,24 @@
+/* inventario.css */
+
+html, body {
+    height: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    /* Fondo doble */
+    background-image: url("../images/fondo_lafornería.jpg"), url("../images/fondo_lafornería.jpg");
+    background-size: cover, cover;
+    background-position: top center, top center;
+    background-repeat: no-repeat, no-repeat;
+    background-attachment: fixed, fixed;
+    background-color: #111;
+  }
+  
+  .confirm-card,
+  .card {
+    background: rgba(255, 255, 255, 0.92);
+  }
+  

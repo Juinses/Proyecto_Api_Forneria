@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'Forneria.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',   # Cambiamos el motor a MySQL
-        'NAME': 'Forneria',            # Nombre de tu base de datos
+        'NAME': 'forneria',            # Nombre de tu base de datos
         'USER': 'Alucard',                # Usuario de MySQL
         'PASSWORD': 'belmont',            # Contraseña del usuario
         'HOST': 'localhost',                    # Servidor (localhost si es local)
@@ -128,3 +128,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'  # o la página principal
+LOGOUT_REDIRECT_URL = '/login/'
+
