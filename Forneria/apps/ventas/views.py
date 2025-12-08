@@ -22,6 +22,11 @@ def es_admin(user):
     return user.is_authenticated and user.is_superuser
 
 
+@login_required
+def ventas_home(request):
+    return render(request, 'ventas/home.html')
+
+
 # =========================
 # REGISTRAR VENTA CON LÓGICA DE NEGOCIO
 # Solo vendedores y admin pueden crear ventas

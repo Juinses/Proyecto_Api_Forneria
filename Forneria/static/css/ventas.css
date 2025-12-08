@@ -8,12 +8,12 @@ html, body {
   }
   
   body {
-    background-image: url("../images/fondo_lafornería.jpg"), url("../images/fondo_lafornería.jpg");
+    /* background-image: url("../images/fondo_lafornería.jpg"), url("../images/fondo_lafornería.jpg");
     background-size: cover, cover;
     background-repeat: no-repeat, no-repeat;
     background-position: top center, top center;
     background-attachment: fixed, fixed;
-    background-color: #111;
+    background-color: #111; */
   }
   
   .product-card {

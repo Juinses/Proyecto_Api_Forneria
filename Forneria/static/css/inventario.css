@@ -9,12 +9,12 @@ html, body {
   
   body {
     /* Fondo doble */
-    background-image: url("../images/fondo_lafornería.jpg"), url("../images/fondo_lafornería.jpg");
+    /* background-image: url("../images/fondo_lafornería.jpg"), url("../images/fondo_lafornería.jpg");
     background-size: cover, cover;
     background-position: top center, top center;
     background-repeat: no-repeat, no-repeat;
     background-attachment: fixed, fixed;
-    background-color: #111;
+    background-color: #111; */
   }
   
   .confirm-card,

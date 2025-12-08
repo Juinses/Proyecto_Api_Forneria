@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12 text-center">
+            <h1><i class="bi bi-cart-check"></i> Módulo de Ventas</h1>
+            <p class="lead">Gestiona las ventas y facturación de la fornería.</p>
+        </div>
+    </div>
+
+    <div class="row mt-4 justify-content-center">
+        <!-- Tarjeta para ver ventas -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title"><i class="bi bi-receipt-cutoff"></i> Historial de Ventas</h5>
+                    <p class="card-text">Visualiza, edita y gestiona todas las ventas realizadas.</p>
+                    <a href="{% url 'lista_ventas' %}" class="btn btn-primary">Ir a Ventas</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta para crear nueva venta -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title"><i class="bi bi-plus-circle"></i> Nueva Venta</h5>
+                    <p class="card-text">Registra una nueva venta en el sistema.</p>
+                    <a href="{% url 'crear_venta' %}" class="btn btn-success">Crear Venta</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

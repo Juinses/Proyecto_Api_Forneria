@@ -14,6 +14,13 @@ def es_admin(user):
     return user.is_authenticated and user.is_superuser
 
 
+@login_required
+def inventario_home(request):
+    return render(request, 'inventario/home.html')
+
+
+
+
 # =========================
 # LISTAR PRODUCTOS CON FILTROS AVANZADOS
 # Solo usuarios autenticados pueden ver el inventario

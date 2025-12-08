@@ -1,0 +1,91 @@
+/* Paleta de colores para el tema de cafetería */
+:root {
+  --color-primario: #6f4e37; /* Coffee brown */
+  --color-secundario: #a0785a; /* Latte brown */
+  --color-acento: #c89f7a; /* Light brown */
+  --color-fondo: #f5f5dc; /* Beige */
+  --color-texto: #3b2f2f; /* Dark brown for text */
+  --color-blanco: #ffffff;
+}
+
+body {
+  background-color: var(--color-fondo) !important;
+  color: var(--color-texto);
+}
+
+/* Barra de navegación */
+.navbar.bg-dark {
+  background-color: var(--color-primario) !important;
+}
+
+.navbar .navbar-brand,
+.navbar .text-light,
+.navbar .btn-outline-light {
+  color: var(--color-blanco) !important;
+  border-color: var(--color-blanco) !important;
+}
+
+.navbar .btn-outline-light:hover {
+    background-color: var(--color-secundario);
+    border-color: var(--color-secundario);
+}
+
+/* Botones */
+.btn-primary {
+  background-color: var(--color-primario);
+  border-color: var(--color-primario);
+}
+.btn-primary:hover {
+  background-color: var(--color-secundario);
+  border-color: var(--color-secundario);
+}
+
+.btn-success {
+    background-color: #5a8c5a; /* Un verde más apagado */
+    border-color: #5a8c5a;
+}
+.btn-success:hover{
+    background-color: #4a7c4a;
+    border-color: #4a7c4a;
+}
+
+.btn-info {
+    background-color: var(--color-secundario);
+    border-color: var(--color-secundario);
+}
+.btn-info:hover {
+    background-color: var(--color-primario);
+    border-color: var(--color-primario);
+}
+
+
+/* Tarjetas */
+.card {
+    border: 1px solid var(--color-acento);
+    background-color: #fff9f2;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    border-radius: 0.75rem;
+}
+
+.card-header {
+    background-color: var(--color-secundario);
+    color: var(--color-blanco);
+}
+
+.card-title {
+    color: var(--color-primario);
+}
+
+/* Alertas */
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
