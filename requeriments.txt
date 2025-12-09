@@ -1,0 +1,21 @@
+# Framework principal
+Django>=5.0,<6.0
+
+# Conector MySQL
+mysqlclient>=2.2.0
+
+# Generación de PDF/HTML
+weasyprint==60.1
+cairosvg==2.7.0
+tinycss2==1.2.1
+cssselect2==0.7.0
+
+# Dependencias de WeasyPrint (renderizado y tipografía)
+cffi>=1.15.0
+pycairo>=1.23.0
+pillow>=10.0.0
+pango>=1.50.0   # en Linux/macOS suele venir con GTK, en Windows necesitas GTK runtime
+
+# Utilidades adicionales
+django-environ>=0.11.2   # para manejar variables de entorno (DB, claves secretas)
+python-decouple>=3.8     # alternativa ligera para configuración

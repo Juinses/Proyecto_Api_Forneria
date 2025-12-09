@@ -1,0 +1,16 @@
+.custom-card {
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+}
+
+.btn-login {
+  background-color: #907761 !important;
+  border: 1.5px solid #553d2a !important;
+  color: white !important;
+}
+
+.btn-login:hover {
+  background-color: #69503c !important;
+  border: 1.5px solid #553d2a !important;
+}
+

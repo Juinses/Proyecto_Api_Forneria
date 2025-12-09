@@ -1,0 +1,69 @@
+/* Barra de navegación */
+
+.navbar {
+  /* Transición de colores suave hacia abajo*/
+  background: linear-gradient(to bottom,  #fff9e1,#ffffff);
+  padding: 15px;
+}
+
+.logo-icon {
+    color: #553d2a; 
+    width: 50px; 
+    height: 50px;
+}
+
+  /*titulo izquierdo: La Forneria*/
+.logo-text {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 30px; 
+  font-weight: bold;
+  margin: 0;
+  line-height: 1;
+  color: #553d2a;
+}
+
+.navbar .navbar-brand,
+.navbar .text-light,
+.navbar .btn-outline-light {
+  color: var(--color-blanco) !important;
+  border-color: var(--color-blanco) !important;
+}
+
+.navbar .btn-outline-light:hover {
+    background-color: var(--color-secundario);
+    border-color: var(--color-secundario);
+}
+
+  /* Botones: Inventario; Ventas; Admin */
+
+.btn-navbar{
+  background-color: #907761;
+  transition: background-color 0.2s, border-color 0.2s;
+  font-weight: 400;
+  border: 1.5px solid #553d2a;
+}
+
+.btn-navbar:hover{
+  background-color: #69503c;
+  transition: background-color 0.2s, border-color 0.2s;
+  font-weight: 400;
+  border: 1.5px solid #553d2a;
+}
+
+.btn-admin{
+  background-color: #fff9e1;
+  color: #907761; 
+  transition: background-color 0.2s, border-color 0.2s;
+  font-weight: 400;
+  border: 1.5px solid #907761;
+}
+
+.btn-admin:hover{
+  background-color: #e3d7bf;
+  color: #553d2a; 
+  transition: background-color 0.2s, border-color 0.2s;
+  font-weight: 400;
+  border: 1.5px solid #553d2a;
+}
+
+  

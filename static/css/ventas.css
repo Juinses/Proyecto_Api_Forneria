@@ -1,0 +1,43 @@
+/* ventas.css */
+
+html, body {
+    height: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+
+
+
+  .product-card {
+    cursor: pointer;
+    transition: 0.1s;
+  }
+  
+  .product-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,.1);
+  }
+  
+  .ticket-sidebar {
+    background: #fff;
+    border-radius: .75rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,.1);
+  }
+
+  .table-card {
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    border-radius: 0.75rem;
+    padding: 20px;
+  }
+  
+  .vh-90 {
+    height: 90vh;
+  }
+  
+  .category-btn.active {
+    background: #198754;
+    color: #080ba1;
+  }
+
