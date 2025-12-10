@@ -13,5 +13,4 @@ urlpatterns = [
     path('comprobante/<int:venta_id>/', views.comprobante_html, name='comprobante_html'),  
     path('comprobante/<int:venta_id>/pdf/', views.comprobante_pdf, name='comprobante_pdf'),
     path('clientes/', views.lista_clientes, name='lista_clientes'),
-
 ]

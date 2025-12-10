@@ -83,3 +83,17 @@ class MovimientoInventarioForm(forms.ModelForm):
         if cantidad is None or cantidad < 1:
             raise forms.ValidationError('La cantidad debe ser un entero positivo.')
         return cantidad
+
+class NutricionalForm(forms.ModelForm):
+    class Meta:
+        model = Nutricional
+        fields = ['identificador', 'calorias', 'proteinas', 'grasas', 'carbohidratos', 'azucares', 'sodio']
+        widgets = {
+            'identificador': forms.TextInput(attrs={'class': 'form-control'}),
+            'calorias': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'proteinas': forms.NumberInput(attrs={'class': 'form-control', 'step': 0.01, 'min': 0}),
+            'grasas': forms.NumberInput(attrs={'class': 'form-control', 'step': 0.01, 'min': 0}),
+            'carbohidratos': forms.NumberInput(attrs={'class': 'form-control', 'step': 0.01, 'min': 0}),
+            'azucares': forms.NumberInput(attrs={'class': 'form-control', 'step': 0.01, 'min': 0}),
+            'sodio': forms.NumberInput(attrs={'class': 'form-control', 'step': 0.01, 'min': 0}),
+        }

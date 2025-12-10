@@ -1,4 +1,3 @@
-# inventario/views.py
 from decimal import Decimal
 
 # Django
@@ -8,10 +7,11 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 from django.http import JsonResponse
+from .forms import CategoriaForm
 
 # Local
-from .models import Productos, Categorias, MovimientosInventario
-from .forms import ProductoForm, CategoriaForm
+from .models import Productos, Categorias, MovimientosInventario, Nutricional
+from .forms import ProductoForm, CategoriaForm, NutricionalForm
 
 
 # ============================================================
@@ -33,66 +33,52 @@ def inventario_home(request):
 
 
 # ============================================================
-# PRODUCTOS — LISTAR + FILTROS
+# PRODUCTOS — LISTADO + FILTROS
 # ============================================================
 @login_required
 def lista_productos(request):
-    productos = Productos.objects.all().select_related('categorias')
+    productos = Productos.objects.select_related('categorias').all()
     categorias = Categorias.objects.all()
 
-    # Filtros
-    query = request.GET.get('q')
-    categoria_id = request.GET.get('categoria')
-    precio_min = request.GET.get('precio_min')
-    precio_max = request.GET.get('precio_max')
-    stock_min = request.GET.get('stock_min')
-    stock_max = request.GET.get('stock_max')
+    q = request.GET.get('q')
+    cat = request.GET.get('categoria')
+    pmin = request.GET.get('precio_min')
+    pmax = request.GET.get('precio_max')
+    smin = request.GET.get('stock_min')
+    smax = request.GET.get('stock_max')
 
-    # Búsqueda
-    if query:
-        productos = productos.filter(nombre__icontains=query)
+    if q:
+        productos = productos.filter(nombre__icontains=q)
 
-    # Filtro categoría
-    if categoria_id and categoria_id.isdigit():
-        productos = productos.filter(categorias_id=int(categoria_id))
+    if cat and cat.isdigit():
+        productos = productos.filter(categorias_id=int(cat))
 
-    # Filtro precios
-    try:
-        if precio_min:
-            productos = productos.filter(precio__gte=Decimal(precio_min))
-        if precio_max:
-            productos = productos.filter(precio__lte=Decimal(precio_max))
-    except:
-        pass
+    if pmin:
+        productos = productos.filter(precio__gte=Decimal(pmin))
+    if pmax:
+        productos = productos.filter(precio__lte=Decimal(pmax))
 
-    # Filtro stock
-    try:
-        if stock_min:
-            productos = productos.filter(stock_actual__gte=int(stock_min))
-        if stock_max:
-            productos = productos.filter(stock_actual__lte=int(stock_max))
-    except:
-        pass
+    if smin:
+        productos = productos.filter(stock_actual__gte=int(smin))
+    if smax:
+        productos = productos.filter(stock_actual__lte=int(smax))
 
     return render(request, 'inventario/lista.html', {
         'productos': productos,
-        'categorias': categorias
+        'categorias': categorias,
     })
 
 
 # ============================================================
-# PRODUCTOS — CRUD (ADMIN)
+# PRODUCTOS — CRUD
 # ============================================================
 @login_required
 @user_passes_test(es_admin)
 def crear_producto(request):
-    if request.method == 'POST':
-        form = ProductoForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_productos')
-    else:
-        form = ProductoForm()
+    form = ProductoForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('lista_productos')
 
     return render(request, 'inventario/form.html', {'form': form})
 
@@ -101,14 +87,11 @@ def crear_producto(request):
 @user_passes_test(es_admin)
 def editar_producto(request, pk):
     producto = get_object_or_404(Productos, pk=pk)
+    form = ProductoForm(request.POST or None, instance=producto)
 
-    if request.method == 'POST':
-        form = ProductoForm(request.POST, instance=producto)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_productos')
-    else:
-        form = ProductoForm(instance=producto)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('lista_productos')
 
     return render(request, 'inventario/form.html', {'form': form})
 
@@ -134,33 +117,35 @@ def lista_categorias(request):
     categorias = Categorias.objects.all()
     return render(request, 'inventario/lista_categorias.html', {'categorias': categorias})
 
-
 @login_required
 @user_passes_test(es_admin)
 def crear_categoria(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = CategoriaForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('lista_categorias')
+            categoria = form.save()
+            # Siempre devolver JSON si es AJAX
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({
+                    "id": categoria.id,
+                    "nombre": categoria.nombre
+                })
+            # En caso normal, recargar la misma página
+            return redirect(request.META.get('HTTP_REFERER', '/'))
     else:
         form = CategoriaForm()
 
-    return render(request, 'inventario/form_categoria.html', {'form': form})
-
+    return render(request, "inventario/categorias/form.html", {"form": form})
 
 @login_required
 @user_passes_test(es_admin)
 def editar_categoria(request, pk):
     categoria = get_object_or_404(Categorias, pk=pk)
+    form = CategoriaForm(request.POST or None, instance=categoria)
 
-    if request.method == 'POST':
-        form = CategoriaForm(request.POST, instance=categoria)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_categorias')
-    else:
-        form = CategoriaForm(instance=categoria)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('lista_categorias')
 
     return render(request, 'inventario/form_categoria.html', {'form': form})
 
@@ -176,7 +161,25 @@ def eliminar_categoria(request, pk):
 
     return render(request, 'inventario/confirmar_eliminar_categoria.html', {'categoria': categoria})
 
-
+# ============================================================
+# Creacion Nutricional
+# ============================================================
+@login_required
+@user_passes_test(es_admin)
+def crear_nutricional(request):
+    if request.method == "POST":
+        form = NutricionalForm(request.POST)
+        if form.is_valid():
+            nutricional = form.save()
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({
+                    "id": nutricional.id,
+                    "nombre": str(nutricional)
+                })
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+    else:
+        form = NutricionalForm()
+    return render(request, "inventario/nutricional/form.html", {"form": form})
 # ============================================================
 # MOVIMIENTOS DE INVENTARIO
 # ============================================================
@@ -185,57 +188,45 @@ def eliminar_categoria(request, pk):
 @transaction.atomic
 def movimientos_inventario(request):
 
-    # PROCESAR MOVIMIENTO
     if request.method == 'POST':
         producto_id = request.POST.get('producto_id')
         action = request.POST.get('action')
-
-        try:
-            cantidad = int(request.POST.get('cantidad', 0))
-        except:
-            cantidad = 0
+        cantidad = int(request.POST.get('cantidad', 0))
 
         if not producto_id or cantidad <= 0:
             return redirect('movimientos_inventario')
 
         producto = Productos.objects.select_for_update().get(pk=producto_id)
 
-        entrada = action in ('ingreso', 'ENTRADA', 'entrada')
-        salida = action in ('egreso', 'SALIDA', 'salida')
-
-        if entrada:
+        if action.lower() in ('ingreso', 'entrada'):
             MovimientosInventario.objects.create(
                 productos=producto,
                 tipo_movimiento=MovimientosInventario.ENTRADA,
-                cantidad=cantidad,
-                fecha=timezone.now()
+                cantidad=cantidad
             )
             producto.stock_actual = (producto.stock_actual or 0) + cantidad
-            producto.save(update_fields=['stock_actual'])
 
-        elif salida:
-            stock_actual = producto.stock_actual or 0
-            cantidad = min(cantidad, stock_actual)  # evita negativos
-
+        elif action.lower() in ('egreso', 'salida'):
+            cantidad = min(cantidad, producto.stock_actual or 0)
             MovimientosInventario.objects.create(
                 productos=producto,
                 tipo_movimiento=MovimientosInventario.SALIDA,
-                cantidad=cantidad,
-                fecha=timezone.now()
+                cantidad=cantidad
             )
             producto.stock_actual = F('stock_actual') - cantidad
-            producto.save(update_fields=['stock_actual'])
 
+        producto.save(update_fields=['stock_actual'])
         return redirect('movimientos_inventario')
 
-    # LISTADO
-    productos = Productos.objects.all().only('id', 'nombre', 'stock_actual')
+    productos = Productos.objects.only('id', 'nombre', 'stock_actual')
     movimientos = MovimientosInventario.objects.select_related('productos').order_by('-fecha')[:10]
 
     return render(request, 'inventario/movimientos.html', {
         'productos': productos,
         'movimientos': movimientos
     })
+
+
 
 
 # ============================================================

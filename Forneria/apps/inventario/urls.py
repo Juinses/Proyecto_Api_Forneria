@@ -14,4 +14,5 @@ urlpatterns = [
     path('categorias/nueva/', views.crear_categoria, name='crear_categoria'),
     path('categorias/editar/<int:pk>/', views.editar_categoria, name='editar_categoria'),
     path('categorias/eliminar/<int:pk>/', views.eliminar_categoria, name='eliminar_categoria'),
+    path('nutricional/nuevo/', views.crear_nutricional, name='crear_nutricional'),
 ]

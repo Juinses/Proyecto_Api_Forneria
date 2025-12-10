@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <div class="container mt-4">
   <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-md-10">
 
       <div class="card shadow-sm">
 
@@ -19,16 +20,49 @@
 
         <!-- Formulario -->
         <div class="card-body">
-          <form method="post">
+          <form method="post" id="productoForm">
             {% csrf_token %}
 
-            {{ form.as_p }}
+            <div class="row g-3">
 
-            <div class="d-grid gap-2 mt-3">
+              {% for field in form %}
+                <div class="col-md-6">
+                  <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+
+                  {% if field.name == 'categorias' %}
+                    <!-- Campo Categoría con botón al lado -->
+                    <div class="input-group">
+                      {{ field }}
+                      <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#modalCategoria">
+                        <i class="bi bi-plus-circle"></i>
+                      </button>
+                    </div>
+                  {% elif field.name == 'nutricional' %}
+                    <!-- Campo Nutricional con botón al lado -->
+                    <div class="input-group">
+                      {{ field }}
+                      <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#modalNutricional">
+                        <i class="bi bi-plus-circle"></i>
+                      </button>
+                    </div>
+                  {% else %}
+                    {{ field }}
+                  {% endif %}
+
+                  {% if field.errors %}
+                    <div class="text-danger small mt-1">
+                      {{ field.errors|striptags }}
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
               <button type="submit" class="btn btn-success">
                 <i class="bi bi-save"></i> Guardar
               </button>
-
               <a href="{% url 'lista_productos' %}" class="btn btn-secondary">
                 Cancelar
               </a>
@@ -42,4 +76,97 @@
     </div>
   </div>
 </div>
+
+<!-- ============================= -->
+<!--   MODAL CREAR CATEGORÍA      -->
+<!-- ============================= -->
+<div class="modal fade" id="modalCategoria" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Nueva Categoría</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form method="POST" action="{% url 'crear_categoria' %}" id="categoriaForm">
+          {% csrf_token %}
+          <label for="nombreCategoria" class="form-label">Nombre</label>
+          <input type="text" name="nombre" id="nombreCategoria" class="form-control" required>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" form="categoriaForm" class="btn btn-primary">Guardar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================= -->
+<!--   MODAL CREAR NUTRICIONAL    -->
+<!-- ============================= -->
+<div class="modal fade" id="modalNutricional" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Nuevo Registro Nutricional</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form method="POST" action="{% url 'crear_nutricional' %}" id="nutricionalForm">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="id_identificador" class="form-label">Identificador</label>
+            <input type="text" name="identificador" id="id_identificador" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="id_calorias" class="form-label">Calorías</label>
+            <input type="number" name="calorias" id="id_calorias" class="form-control" min="0">
+          </div>
+
+          <div class="mb-3">
+            <label for="id_proteinas" class="form-label">Proteínas</label>
+            <input type="number" step="0.01" name="proteinas" id="id_proteinas" class="form-control" min="0">
+          </div>
+
+          <div class="mb-3">
+            <label for="id_grasas" class="form-label">Grasas</label>
+            <input type="number" step="0.01" name="grasas" id="id_grasas" class="form-control" min="0">
+          </div>
+
+          <div class="mb-3">
+            <label for="id_carbohidratos" class="form-label">Carbohidratos</label>
+            <input type="number" step="0.01" name="carbohidratos" id="id_carbohidratos" class="form-control" min="0">
+          </div>
+
+          <div class="mb-3">
+            <label for="id_azucares" class="form-label">Azúcares</label>
+            <input type="number" step="0.01" name="azucares" id="id_azucares" class="form-control" min="0">
+          </div>
+
+          <div class="mb-3">
+            <label for="id_sodio" class="form-label">Sodio</label>
+            <input type="number" step="0.01" name="sodio" id="id_sodio" class="form-control" min="0">
+          </div>
+
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" form="nutricionalForm" class="btn btn-primary">Guardar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 {% endblock %}

@@ -5,7 +5,6 @@
   <!-- Encabezado -->
   <div class="d-flex justify-content-between align-items-center">
     <h3><i class="bi bi-receipt"></i> Ventas</h3>
-
     <a href="{% url 'crear_venta' %}" class="btn btn-primary">
       <i class="bi bi-plus-lg"></i> Nueva Venta
     </a>
@@ -13,7 +12,7 @@
 
   <!-- Tabla -->
   <div class="table-responsive mt-3">
-    <table class="table table-hover align-middle">
+    <table class="table table-hover table-striped align-middle">
       <thead>
         <tr>
           <th>ID</th>
@@ -26,7 +25,6 @@
         </tr>
       </thead>
       <tbody>
-
         {% for v in ventas %}
           <tr>
             <td>{{ v.id }}</td>
@@ -34,27 +32,26 @@
             <td>{{ v.clientes.nombre }}</td>
             <td>{{ v.canal_venta }}</td>
             <td>{{ v.folio|default:"—" }}</td>
-            <td>${{ v.total_con_iva }}</td>
-
+            <td>${{ v.total_con_iva|floatformat:0 }}</td>
             <td class="text-end">
 
               <!-- Comprobante HTML -->
-              <a href="{% url 'comprobante_html' v.id %}" class="btn btn-sm btn-outline-secondary">
+              <a href="{% url 'comprobante_html' v.id %}" class="btn btn-sm btn-outline-secondary" title="Ver comprobante HTML">
                 <i class="bi bi-file-earmark"></i>
               </a>
 
               <!-- PDF -->
-              <a href="{% url 'comprobante_pdf' v.id %}" class="btn btn-sm btn-outline-danger">
+              <a href="{% url 'comprobante_pdf' v.id %}" class="btn btn-sm btn-outline-danger" title="Descargar PDF">
                 <i class="bi bi-filetype-pdf"></i>
               </a>
 
               <!-- Editar -->
-              <a href="{% url 'editar_venta' v.id %}" class="btn btn-sm btn-outline-primary">
+              <a href="{% url 'editar_venta' v.id %}" class="btn btn-sm btn-outline-primary" title="Editar venta">
                 <i class="bi bi-pencil"></i>
               </a>
 
               <!-- Eliminar -->
-              <a href="{% url 'eliminar_venta' v.id %}" class="btn btn-sm btn-outline-danger">
+              <a href="{% url 'eliminar_venta' v.id %}" class="btn btn-sm btn-outline-danger" title="Eliminar venta">
                 <i class="bi bi-trash"></i>
               </a>
 
@@ -67,7 +64,6 @@
             </td>
           </tr>
         {% endfor %}
-
       </tbody>
     </table>
   </div>

@@ -1,4 +1,3 @@
-
 // =========================
 // Utilidades
 // =========================
@@ -15,14 +14,7 @@ function clamp(n, min, max) {
 const productosDataElement = document.getElementById("productos-data");
 const rawProductos = JSON.parse(productosDataElement.textContent);
 
-// rawProductos viene del serializer de Django: [{model:..., pk:..., fields:{nombre, precio}}...]
-const productos = rawProductos.map(p => ({
-  id: p.pk,                    // ⚠️ usamos id (no codigo)
-  nombre: p.fields.nombre,
-  precio: Number(p.fields.precio), // viene como string, lo convertimos para UI
-  // opcional: incluir stock_actual si lo serializas desde Django
-  // stock_actual: p.fields.stock_actual
-}));
+const productos = JSON.parse(document.getElementById("productos-data").textContent);
 
 // =========================
 // Referencias HTML
@@ -31,13 +23,12 @@ const productList = document.getElementById("product-list");
 const search = document.getElementById("search");
 const carritoBody = document.getElementById("carritoBody");
 
-// Estado
-let carrito = []; // [{id, nombre, precio, cantidad}]
+let carrito = []; // [{id, nombre, precio, cantidad, descuento_pct}]
 
 // =========================
 // Fecha y hora en tiempo real
 // =========================
-function updateDateTime(){
+function updateDateTime() {
   const now = new Date();
   document.getElementById("fecha").textContent = now.toLocaleDateString('es-CL');
   document.getElementById("hora").textContent = now.toLocaleTimeString('es-CL');
@@ -46,9 +37,9 @@ setInterval(updateDateTime, 1000);
 updateDateTime();
 
 // =========================
-/** Render de productos */
+// Render de productos
 // =========================
-function renderProductos(filtro = ""){
+function renderProductos(filtro = "") {
   productList.innerHTML = "";
 
   productos
@@ -62,6 +53,7 @@ function renderProductos(filtro = ""){
           <h6>${p.nombre}</h6>
           <p class="text-muted m-0">ID: ${p.id}</p>
           <span class="fw-bold">${CLP.format(p.precio)}</span>
+          <p class="text-muted m-0">Stock: ${p.stock_actual}</p>
         </div>
       `;
 
@@ -79,47 +71,49 @@ search.oninput = () => {
 };
 
 // =========================
-/** Agregar por ID manual */
+// Agregar por ID manual
 // =========================
 document.getElementById("btnBuscarCodigo").onclick = () => {
-  // ahora tomamos ID en vez de "codigo"
   const idStr = document.getElementById("codigoInput").value.trim();
   const id = parseInt(idStr, 10);
-  if (Number.isNaN(id)) {
-    alert("ID inválido");
-    return;
-  }
+  if (Number.isNaN(id)) { alert("ID inválido"); return; }
   agregarCarritoPorId(id);
 };
 
 // =========================
-/** Añadir al carrito */
+// Añadir al carrito con validación de stock
 // =========================
-function agregarCarritoPorId(id){
+function agregarCarritoPorId(id) {
   const producto = productos.find(p => p.id === id);
-
   if (!producto) { alert("Producto no encontrado"); return; }
 
-  // Si ya existe en carrito, suma cantidad; si no, agrega
   const item = carrito.find(i => i.id === id);
   if (item) {
-    item.cantidad = clamp(item.cantidad + 1, 1, 9999);
+    if (item.cantidad + 1 > producto.stock_actual) {
+      alert(`No hay suficiente stock para ${producto.nombre}`);
+      return;
+    }
+    item.cantidad = clamp(item.cantidad + 1, 1, producto.stock_actual);
   } else {
-    carrito.push({ id: producto.id, nombre: producto.nombre, precio: producto.precio, cantidad: 1 });
+    if (producto.stock_actual <= 0) {
+      alert(`Producto ${producto.nombre} sin stock disponible`);
+      return;
+    }
+    carrito.push({ id: producto.id, nombre: producto.nombre, precio: producto.precio, cantidad: 1, descuento_pct: 0 });
   }
 
   renderCarrito();
 }
 
 // =========================
-/** Render del carrito */
+// Render del carrito
 // =========================
-function renderCarrito(){
+function renderCarrito() {
   carritoBody.innerHTML = "";
 
   carrito.forEach(item => {
     const fila = document.createElement("tr");
-    const subtotal = item.precio * item.cantidad;
+    const subtotal = item.precio * item.cantidad * (1 - (item.descuento_pct || 0) / 100);
 
     fila.innerHTML = `
       <td>${item.id}</td>
@@ -133,15 +127,14 @@ function renderCarrito(){
       </td>
     `;
 
-    // editar cantidad
     const qtyInput = fila.querySelector(".edit-qty");
     qtyInput.oninput = e => {
       const val = parseInt(e.target.value, 10);
-      item.cantidad = clamp(Number.isNaN(val) ? 1 : val, 1, 9999);
+      const producto = productos.find(p => p.id === item.id);
+      item.cantidad = clamp(Number.isNaN(val) ? 1 : val, 1, producto.stock_actual);
       renderCarrito();
     };
 
-    // eliminar producto
     fila.querySelector("button").onclick = () => {
       carrito = carrito.filter(x => x.id !== item.id);
       renderCarrito();
@@ -154,11 +147,10 @@ function renderCarrito(){
 }
 
 // =========================
-/** Totales (UI) */
-// =========================
-function calcularTotales(){
-  const neto = carrito.reduce((sum, i) => sum + i.precio * i.cantidad, 0);
-  const iva = Math.round(neto * 0.19); // UI: CLP entero; backend calcula con Decimal
+// Totales (UI)
+function calcularTotales() {
+  const neto = carrito.reduce((sum, i) => sum + i.precio * i.cantidad * (1 - (i.descuento_pct || 0) / 100), 0);
+  const iva = Math.round(neto * 0.19);
   const total = neto + iva;
 
   document.getElementById("neto").textContent = numCL.format(neto);
@@ -167,84 +159,64 @@ function calcularTotales(){
 }
 
 // =========================
-/** Método de pago (UI) */
-// =========================
+// Método de pago (UI)
 document.getElementById("metodoPago").onchange = actualizarCamposPago;
-
-function actualizarCamposPago(){
+function actualizarCamposPago() {
   const metodo = this.value;
   const campos = {
     efectivo: document.getElementById("montoEfectivo"),
-    debito:   document.getElementById("montoDebito"),
-    credito:  document.getElementById("montoCredito")
+    debito: document.getElementById("montoDebito"),
+    credito: document.getElementById("montoCredito")
   };
   Object.values(campos).forEach(c => c.classList.add("d-none"));
 
   if (metodo === "efectivo") campos.efectivo.classList.remove("d-none");
-  if (metodo === "debito")   campos.debito.classList.remove("d-none");
-  if (metodo === "credito")  campos.credito.classList.remove("d-none");
-  if (metodo === "mixto")    Object.values(campos).forEach(c => c.classList.remove("d-none"));
+  if (metodo === "debito") campos.debito.classList.remove("d-none");
+  if (metodo === "credito") campos.credito.classList.remove("d-none");
+  if (metodo === "mixto") Object.values(campos).forEach(c => c.classList.remove("d-none"));
 }
 actualizarCamposPago();
 
 // =========================
-/** CSRF */
-// =========================
+// CSRF
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
+    document.cookie.split(';').forEach(cookie => {
+      cookie = cookie.trim();
       if (cookie.substring(0, name.length + 1) === (name + '=')) {
         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
       }
-    }
+    });
   }
   return cookieValue;
 }
 
 // =========================
-/** Pagar */
-// =========================
+// Pagar
 const crearVentaUrl = document.getElementById('ventas-js').getAttribute('data-url-crear-venta');
 const listaVentasUrl = document.getElementById('ventas-js').getAttribute('data-url-lista-ventas');
 
-const btnPagar = document.getElementById("btnPagar");
-btnPagar.onclick = async () => {
-  if (carrito.length === 0) {
-    alert("El carrito está vacío");
-    return;
-  }
+document.getElementById("btnPagar").onclick = async () => {
+  if (carrito.length === 0) { alert("El carrito está vacío"); return; }
 
-  // Deshabilita para evitar doble click
+  const btnPagar = document.getElementById("btnPagar");
   btnPagar.disabled = true;
   btnPagar.textContent = "Procesando...";
 
-  // Payload mínimo requerido por el backend
   const payload = {
-    cliente_id: 1, // Cliente genérico "Varios"
+    cliente_id: 1,
     canal_venta: 'TIENDA',
-    carrito: carrito.map(i => ({
-      id: i.id,
-      cantidad: i.cantidad,
-      precio: i.precio,           // si confías en el precio del servidor, podrías omitir y tomarlo desde BD
-      // descuento_pct: 0
-    })),
+    carrito: carrito.map(i => ({ id: i.id, cantidad: i.cantidad, precio: i.precio, descuento_pct: i.descuento_pct })),
     pago_completo: true
   };
 
   try {
     const resp = await fetch(crearVentaUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken')
-      },
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
       body: JSON.stringify(payload)
     });
-
     const data = await resp.json();
     if (data.status === 'success') {
       alert("Venta registrada con éxito!");

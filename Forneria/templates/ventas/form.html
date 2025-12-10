@@ -1,76 +1,61 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block content %}
 
 <div class="container my-3">
 
   <!-- Encabezado -->
   <div class="d-flex justify-content-between align-items-center">
-    <div>
-      <h3><i class="bi bi-bag"></i> Nueva Venta</h3>
-      <small class="text-muted">
-        Fecha: <span id="fecha"></span> — Hora: <span id="hora"></span>
-      </small>
-    </div>
-
-    <div>
-      <a href="{% url 'lista_ventas' %}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Volver al listado
-      </a>
-    </div>
+    <h3><i class="bi bi-bag"></i> Nueva Venta</h3>
+    <a href="{% url 'lista_ventas' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Volver al listado
+    </a>
   </div>
 
-  <!-- Barra de búsqueda -->
+  <!-- Barra de búsqueda y agregar por ID -->
   <div class="row g-3 mt-3">
     <div class="col-md-6">
       <input id="search" type="text" class="form-control"
              placeholder="Buscar producto por nombre...">
     </div>
-
-    <div class="col-md-6 d-flex">
-      <input id="codigoInput" type="text" class="form-control me-2"
-             placeholder="Agregar por ID (ej: 101)">
-      <button id="btnBuscarCodigo" class="btn btn-primary">
+    <div class="col-md-4">
+      <input id="codigoInput" type="text" class="form-control"
+             placeholder="Agregar por ID">
+    </div>
+    <div class="col-md-2">
+      <button id="btnBuscarCodigo" class="btn btn-primary w-100">
         <i class="bi bi-plus-lg"></i> Agregar
       </button>
     </div>
   </div>
 
-  <!-- Grid de productos -->
+  <!-- Productos -->
   <div class="row mt-3" id="product-list">
     <!-- JS insertará productos aquí -->
   </div>
 
-  <hr class="my-4" />
+  <hr>
 
   <!-- Carrito -->
-  <div class="row">
-    <div class="col-12">
-      <h5><i class="bi bi-cart2"></i> Carrito</h5>
-
-      <div class="table-responsive">
-        <table class="table table-sm table-striped align-middle">
-          <thead>
-            <tr>
-              <th style="width: 10%">ID</th>
-              <th style="width: 40%">Producto</th>
-              <th style="width: 15%">Cant.</th>
-              <th style="width: 20%">Subtotal</th>
-              <th style="width: 15%"></th>
-            </tr>
-          </thead>
-          <tbody id="carritoBody">
-            <!-- JS pintará filas -->
-          </tbody>
-        </table>
-      </div>
-    </div>
+  <h5><i class="bi bi-cart2"></i> Carrito</h5>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th style="width: 10%">ID</th>
+          <th style="width: 50%">Producto</th>
+          <th style="width: 15%">Cant.</th>
+          <th style="width: 15%">Subtotal</th>
+          <th style="width: 10%"></th>
+        </tr>
+      </thead>
+      <tbody id="carritoBody"></tbody>
+    </table>
   </div>
 
   <!-- Totales -->
   <div class="row mt-3">
-
-    <!-- Totales -->
     <div class="col-md-4">
       <ul class="list-group">
         <li class="list-group-item d-flex justify-content-between">
@@ -85,69 +70,45 @@
       </ul>
     </div>
 
-    <!-- Método de pago -->
+    <!-- Pago -->
     <div class="col-md-8">
-      <div class="card">
-        <div class="card-body">
+      <div class="mb-3">
+        <label for="metodoPago" class="form-label">Método de pago</label>
+        <select id="metodoPago" class="form-select">
+          <option value="efectivo" selected>Efectivo</option>
+          <option value="debito">Débito</option>
+          <option value="credito">Crédito</option>
+          <option value="mixto">Mixto</option>
+        </select>
+      </div>
 
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Método de pago</label>
-              <select id="metodoPago" class="form-select">
-                <option value="efectivo">Efectivo</option>
-                <option value="debito">Débito</option>
-                <option value="credito">Crédito</option>
-                <option value="mixto">Mixto</option>
-              </select>
-            </div>
+      <!-- Campos de pago dinámicos -->
+      <div id="montoEfectivo" class="mb-2">
+        <input type="number" class="form-control" placeholder="Monto efectivo">
+      </div>
+      <div id="montoDebito" class="mb-2 d-none">
+        <input type="number" class="form-control" placeholder="Monto débito">
+      </div>
+      <div id="montoCredito" class="mb-2 d-none">
+        <input type="number" class="form-control" placeholder="Monto crédito">
+      </div>
 
-            <!-- Montos -->
-            <div class="col-md-8">
-
-              <div id="montoEfectivo">
-                <label class="form-label">Monto efectivo</label>
-                <input type="number" class="form-control" min="0" step="1000">
-              </div>
-
-              <div id="montoDebito" class="d-none">
-                <label class="form-label">Monto débito</label>
-                <input type="number" class="form-control" min="0" step="1000">
-              </div>
-
-              <div id="montoCredito" class="d-none">
-                <label class="form-label">Monto crédito</label>
-                <input type="number" class="form-control" min="0" step="1000">
-              </div>
-
-            </div>
-          </div>
-
-          <div class="mt-3 text-end">
-            <button id="btnPagar" class="btn btn-success btn-lg">
-              <i class="bi bi-cash"></i> Pagar
-            </button>
-          </div>
-
-        </div>
+      <div class="text-end">
+        <button id="btnPagar" class="btn btn-success btn-lg">
+          <i class="bi bi-cash"></i> Pagar
+        </button>
       </div>
     </div>
-
   </div>
 
 </div>
 
-<!-- URLs para JS -->
-<script id="ventas-js"
-        data-url-crear-venta="{% url 'crear_venta' %}"
-        data-url-lista-ventas="{% url 'lista_ventas' %}">
-</script>
-
-<!-- JSON de productos -->
+<!-- JSON productos -->
 <script id="productos-data" type="application/json">
   {{ productos_json|safe }}
 </script>
 
-<!-- Archivo JS -->
+<!-- JS ventas -->
 <script src="{% static 'js/ventas.js' %}"></script>
 
 {% endblock %}

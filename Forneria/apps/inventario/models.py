@@ -20,6 +20,7 @@ class Categorias(models.Model):
 
 
 class Nutricional(models.Model):
+    identificador = models.CharField(max_length=50, unique=True, null=True)
     calorias = models.IntegerField(blank=True, null=True, validators=[MinValueValidator(0)])
     proteinas = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])
     grasas = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])
@@ -28,7 +29,7 @@ class Nutricional(models.Model):
     sodio = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(0)])
 
     def __str__(self):
-        return f"Nutr #{self.pk} (kcal={self.calorias})"
+        return self.identificador
 
     class Meta:
         db_table = 'nutricional'
