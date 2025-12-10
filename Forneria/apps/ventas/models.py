@@ -7,7 +7,8 @@ class Clientes(models.Model):
     correo = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        db_table = 'clientes'   # Django usará este nombre de tabla
+        db_table = 'cliente'   # Django usará este nombre de tabla
+        verbose_name_plural = "Clientes"
 
 
 class Ventas(models.Model):
@@ -23,7 +24,8 @@ class Ventas(models.Model):
     clientes = models.ForeignKey(Clientes, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'ventas'
+        db_table = 'venta'
+        verbose_name_plural = "Ventas"
 
 
 class DetalleVenta(models.Model):
@@ -35,3 +37,4 @@ class DetalleVenta(models.Model):
 
     class Meta:
         db_table = 'detalle_venta'
+        verbose_name_plural = "Detalle_ventas"

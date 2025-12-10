@@ -21,10 +21,9 @@ class ProductoForm(forms.ModelForm):
             'stock_minimo': forms.NumberInput(attrs={'class': 'form-control'}),
             'stock_maximo': forms.NumberInput(attrs={'class': 'form-control'}),
             'presentacion': forms.TextInput(attrs={'class': 'form-control'}),
-            'formato': forms.Select(attrs={'class': 'form-select'}),
-            'categorias': forms.SelectMultiple(attrs={'class': 'form-select'}),
-            'nutricional': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        }
+            'formato': forms.Select(attrs={'class': 'form-select'}),  
+            'categorias': forms.SelectMultiple(attrs={'class': 'form-select'}),  # 👈 corrección
+            'nutricional': forms.Textarea(attrs={'class': 'form-control', 'rows': 3})}
 
 class CategoriaForm(forms.ModelForm):
     class Meta:

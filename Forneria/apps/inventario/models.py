@@ -5,8 +5,11 @@ class Categorias(models.Model):
     nombre = models.CharField(max_length=100, blank=True, null=True)
     descripcion = models.CharField(max_length=200, blank=True, null=True)
 
+    def __str__(self):
+        return self.nombre if self.nombre else "Sin nombre"
     class Meta:
-        db_table = 'categorias'   # nombre de la tabla en la BD
+        db_table = 'categoria'   # nombre de la tabla en la BD
+        verbose_name_plural = "Categorias"
 
 class Nutricional(models.Model):
     calorias = models.IntegerField(blank=True, null=True)
@@ -18,7 +21,6 @@ class Nutricional(models.Model):
 
     class Meta:
         db_table = 'nutricional'
-
 
 class Productos(models.Model):
     nombre = models.CharField(max_length=100)
@@ -39,7 +41,8 @@ class Productos(models.Model):
     categorias = models.ForeignKey(Categorias, on_delete=models.CASCADE)
     nutricional = models.ForeignKey(Nutricional, on_delete=models.CASCADE)
     class Meta:
-        db_table = 'productos'
+        db_table = 'producto'
+        verbose_name_plural = "Productos"
 
 
 class MovimientosInventario(models.Model):
