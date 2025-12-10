@@ -1,26 +1,50 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card text-center">
-                <div class="card-header">
-                    <h3>Confirmar Anulación</h3>
-                </div>
-                <div class="card-body">
-                    <p>¿Estás seguro de que deseas anular la venta <strong>#{{ venta.id }}</strong>?</p>
-                    <p>Esta acción no se puede deshacer y el stock de los productos involucrados será restaurado.</p>
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-danger">Sí, anular venta</button>
-                            <a href="{% url 'lista_ventas' %}" class="btn btn-secondary">Cancelar</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card text-center shadow-sm">
+
+        <div class="card-header bg-danger text-white">
+          <h3><i class="bi bi-exclamation-triangle"></i> Confirmar Anulación</h3>
         </div>
+
+        <div class="card-body">
+
+          <p>¿Estás seguro de que deseas anular la venta <strong>#{{ venta.id }}</strong>?</p>
+          <p class="text-muted">Esta acción no se puede deshacer y el stock será restaurado.</p>
+
+          <!-- Opcional: Detalle de productos -->
+          <ul class="list-group mb-3">
+            {% for d in venta.detalles.all %}
+              <li class="list-group-item">
+                {{ d.productos.nombre }} — Cantidad: {{ d.cantidad }}
+              </li>
+            {% empty %}
+              <li class="list-group-item text-muted">No hay detalles asociados.</li>
+            {% endfor %}
+          </ul>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="d-grid gap-2">
+
+              <!-- Botón de anulación -->
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Sí, anular venta
+              </button>
+
+              <!-- Botón volver -->
+              <a href="{% url 'lista_ventas' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+              </a>
+
+            </div>
+          </form>
+
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

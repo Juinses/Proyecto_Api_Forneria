@@ -1,26 +1,53 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
 {% block content %}
+
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card text-center">
-                <div class="card-header">
-                    <h3>Confirmar Eliminación</h3>
-                </div>
-                <div class="card-body">
-                    <p>¿Estás seguro de que deseas eliminar el producto <strong>{{ producto.nombre }}</strong>?</p>
-                    <p>Esta acción no se puede deshacer.</p>
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-danger">Sí, eliminar producto</button>
-                            <a href="{% url 'lista_productos' %}" class="btn btn-secondary">Cancelar</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+
+      <div class="card text-center shadow-sm">
+
+        <!-- Header -->
+        <div class="card-header bg-danger text-white">
+          <h3 class="m-0">
+            <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
+          </h3>
         </div>
+
+        <!-- Body -->
+        <div class="card-body">
+
+          <p>
+            ¿Estás seguro de que deseas eliminar el producto
+            <strong>{{ producto.nombre }}</strong>?
+          </p>
+
+          <p class="text-muted">
+            Esta acción no se puede deshacer.
+          </p>
+
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="d-grid gap-2">
+
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Sí, eliminar
+              </button>
+
+              <a href="{% url 'lista_productos' %}" class="btn btn-secondary">
+                Cancelar
+              </a>
+
+            </div>
+          </form>
+
+        </div>
+
+      </div>
+
     </div>
+  </div>
 </div>
+
 {% endblock %}

@@ -2,46 +2,58 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-12 text-center">
-            <h1><i class="bi bi-box-seam"></i> Módulo de Inventario</h1>
-            <p class="lead">Gestiona los productos y el stock de la fornería.</p>
+
+  <div class="row">
+    <div class="col-12 text-center">
+      <h1><i class="bi bi-box-seam"></i> Módulo de Inventario</h1>
+      <p class="lead">Gestiona los productos y el stock de la fornería.</p>
+    </div>
+  </div>
+
+  <div class="row mt-4 justify-content-center">
+
+    <!-- Productos -->
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center">
+          <h5 class="card-title"><i class="bi bi-list-ul"></i> Productos en Inventario</h5>
+          <p class="card-text">Visualiza, edita y gestiona todos los productos existentes.</p>
+
+          <a href="{% url 'lista_productos' %}" class="btn btn-primary">
+            Ir a Productos
+          </a>
         </div>
+      </div>
     </div>
 
-    <div class="row mt-4 justify-content-center">
-        <!-- Tarjeta para ver/editar productos -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title"><i class="bi bi-list-ul"></i> Productos en Inventario</h5>
-                    <p class="card-text">Visualiza, edita y gestiona todos los productos existentes.</p>
-                    <a href="{% url 'lista_productos' %}" class="btn btn-primary">Ir a Productos</a>
-                </div>
-            </div>
-        </div>
+    <!-- Nuevo producto -->
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center">
+          <h5 class="card-title"><i class="bi bi-plus-circle"></i> Añadir Nuevo Producto</h5>
+          <p class="card-text">Agrega un nuevo producto al inventario.</p>
 
-        <!-- Tarjeta para añadir nuevo producto -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title"><i class="bi bi-plus-circle"></i> Añadir Nuevo Producto</h5>
-                    <p class="card-text">Agrega un nuevo producto al inventario.</p>
-                    <a href="{% url 'crear_producto' %}" class="btn btn-success">Añadir Producto</a>
-                </div>
-            </div>
+          <a href="{% url 'crear_producto' %}" class="btn btn-success">
+            Añadir Producto
+          </a>
         </div>
-
-        <!-- Tarjeta para ver movimientos -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title"><i class="bi bi-arrow-down-up"></i> Movimientos de Stock</h5>
-                    <p class="card-text">Consulta el historial de movimientos de entrada y salida del stock.</p>
-                    <a href="{% url 'movimientos_inventario' %}" class="btn btn-info text-white">Ver Movimientos</a>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <!-- Movimientos -->
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center">
+          <h5 class="card-title"><i class="bi bi-arrow-down-up"></i> Movimientos de Stock</h5>
+          <p class="card-text">Consulta el historial de movimientos de entrada y salida del stock.</p>
+
+          <a href="{% url 'movimientos_inventario' %}" class="btn btn-info text-white">
+            Ver Movimientos
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 {% endblock %}

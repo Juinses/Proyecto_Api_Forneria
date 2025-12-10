@@ -2,35 +2,67 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-12 text-center">
-            <h1><i class="bi bi-cart-check"></i> Módulo de Ventas</h1>
-            <p class="lead">Gestiona las ventas y facturación de la fornería.</p>
+
+  <div class="row">
+    <div class="col-12 text-center">
+      <h1><i class="bi bi-receipt"></i> Módulo de Ventas</h1>
+      <p class="lead">Gestiona las ventas, clientes y comprobantes del sistema.</p>
+    </div>
+  </div>
+
+  <div class="row mt-4 justify-content-center">
+
+    <!-- Listado de Ventas -->
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center">
+          <h5 class="card-title">
+            <i class="bi bi-list-check"></i> Listado de Ventas
+          </h5>
+          <p class="card-text">
+            Consulta, filtra y revisa todas las ventas realizadas.
+          </p>
+          <a href="{% url 'lista_ventas' %}" class="btn btn-primary">
+            Ir al Listado
+          </a>
         </div>
+      </div>
     </div>
 
-    <div class="row mt-4 justify-content-center">
-        <!-- Tarjeta para ver ventas -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title"><i class="bi bi-receipt-cutoff"></i> Historial de Ventas</h5>
-                    <p class="card-text">Visualiza, edita y gestiona todas las ventas realizadas.</p>
-                    <a href="{% url 'lista_ventas' %}" class="btn btn-primary">Ir a Ventas</a>
-                </div>
-            </div>
+    <!-- Crear Nueva Venta -->
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center">
+          <h5 class="card-title">
+            <i class="bi bi-plus-circle"></i> Nueva Venta
+          </h5>
+          <p class="card-text">
+            Registra una nueva venta en el sistema usando el POS.
+          </p>
+          <a href="{% url 'crear_venta' %}" class="btn btn-success">
+            Crear Venta
+          </a>
         </div>
-
-        <!-- Tarjeta para crear nueva venta -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title"><i class="bi bi-plus-circle"></i> Nueva Venta</h5>
-                    <p class="card-text">Registra una nueva venta en el sistema.</p>
-                    <a href="{% url 'crear_venta' %}" class="btn btn-success">Crear Venta</a>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <!-- Clientes -->
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center">
+          <h5 class="card-title">
+            <i class="bi bi-people"></i> Clientes
+          </h5>
+          <p class="card-text">
+            Gestiona los clientes utilizados en las ventas.
+          </p>
+          <a href="{% url 'lista_clientes' %}" class="btn btn-info text-white">
+            Ver Clientes
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 {% endblock %}
