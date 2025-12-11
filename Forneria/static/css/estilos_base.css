@@ -1,0 +1,142 @@
+/* Barra de navegación */
+
+/* Transición de colores suave hacia abajo*/
+.navbar {  
+  background: linear-gradient(to bottom,#fff9e1,#ffffff);
+  padding: 15px;
+}
+
+/* Hacer que el contenedor de la navbar use grid para centrar el bloque de botones */
+.navbar .container-fluid {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 1rem;
+}
+
+.nav-center {
+  justify-self: center;
+}
+
+.logo-icon {
+    color: #553d2a; 
+    width: 50px; 
+    height: 50px;
+}
+
+  /* Logo (texto) */
+.logo-text {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 30px; 
+  font-weight: bold;
+  margin: 0;
+  line-height: 1;
+  color: #553d2a;
+}
+
+  /* Botones de uso general y admin */
+
+.btn-general{
+  color: #fff9e1;
+  background-color: #907761;
+  transition: background-color 0.2s, border-color 0.2s;
+  font-weight: 400;
+  border: 1.5px solid #553d2a;
+}
+
+.btn-general:hover{
+  color: #fff9e1;
+  background-color: #69503c;
+  border: 1.5px solid #553d2a;
+}
+
+.btn-admin{
+  background-color: #fff9e1;
+  color: #907761; 
+  transition: background-color 0.2s, border-color 0.2s;
+  font-weight: 400;
+  border: 1.5px solid #907761;
+}
+
+/* Estado deshabilitado consistente para botones */
+.btn-general.disabled,
+.btn-admin.disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  filter: grayscale(0.05);
+}
+
+/* Normalizar renderizado de botones entre navegadores */
+.btn, .btn-general, .btn-admin, #inventario-disabled, .btn-sesion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  line-height: 1;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn-admin:hover{
+  background-color: #e3d7bf;
+  color: #553d2a; 
+  border: 1.5px solid #553d2a;
+}
+
+  /* Nombre de usuario*/ 
+
+.user-text {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+  margin: 0;
+  line-height: 1;
+  color: #553d2a;
+}
+
+  /* Cierre de sesion: Animacion de puerta*/
+  /* Posicion: Los iconos estaran en el mismo espacio */
+
+  .btn-sesion{
+    background-color: transparent;
+    color: #553d2a;
+    transition: background-color 0.2s, border-color 0.2s;
+    height: 38px;
+    border: none;
+}
+
+.icono-puerta{ 
+  display: inline-block;
+  position: relative;
+  font-size: 40px;
+  width: 1.2em; 
+  height: 1.2em;
+  transform: translateY(4px); 
+}
+
+  /* Iconos superpuestos  */
+.icono-puerta .icono-normal,
+.icono-puerta .icono-hover{
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.3s ease;
+}
+
+.icono-puerta .icono-normal{
+    opacity: 1;
+}
+
+.icono-puerta .icono-hover{
+    opacity: 0;
+}
+
+button:hover .icono-puerta .icono-normal{
+    opacity: 0;
+}
+
+button:hover .icono-puerta .icono-hover{
+    opacity: 1;
+}
+
+

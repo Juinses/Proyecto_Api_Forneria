@@ -136,4 +136,3 @@ LOGOUT_REDIRECT_URL = '/login/'
 
 # CSRF configuration
 CSRF_FAILURE_VIEW = 'Forneria.views.csrf_failure'
-

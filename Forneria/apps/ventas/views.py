@@ -11,6 +11,7 @@ from django.core.serializers import serialize
 
 from .models import Ventas, Clientes, DetalleVenta
 from apps.inventario.models import Productos
+from .forms import ClienteForm
 
 
 # -------------------------
@@ -36,76 +37,65 @@ def ventas_home(request):
 # -------------------------
 @login_required
 @user_passes_test(lambda u: es_vendedor(u) or es_admin(u))
-@transaction.atomic
 def crear_venta(request):
     if request.method == 'POST':
+        import json
+        from decimal import Decimal
+        from django.http import JsonResponse
+        from apps.ventas.models import Ventas
+
         # Leer JSON del POS
         try:
             data = json.loads(request.body)
         except Exception:
             return JsonResponse({'status': 'error', 'message': 'JSON inválido'}, status=400)
 
-        cliente_id = data.get('cliente_id', 1)  # Cliente default "Varios"
-        carrito = data.get('carrito', [])
+        cliente_id = data.get('cliente_id')
+        if not cliente_id:
+            return JsonResponse({'status': 'error', 'message': 'Debes seleccionar un cliente'}, status=400)
 
-        if not carrito:
-            return JsonResponse({'status': 'error', 'message': 'El carrito está vacío'}, status=400)
+        try:
+            cliente = Clientes.objects.get(pk=cliente_id)
+        except Clientes.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Cliente no encontrado'}, status=400)
 
-        # Obtener o crear cliente por defecto
-        cliente, _ = Clientes.objects.get_or_create(
-            pk=cliente_id,
-            defaults={'nombre': 'Varios', 'rut': None}
-        )
-
-        # Crear venta inicial (totales en 0, luego se recalculan con el modelo)
+        # Crear venta mínima
         venta = Ventas.objects.create(
             clientes=cliente,
             descuento=Decimal('0.00'),
-            canal_venta=data.get('canal_venta', 'TIENDA'),
-            folio=data.get('folio'),
+            canal_venta='TIENDA',
         )
-
-        # Crear detalle producto x producto
-        for item in carrito:
-            producto_id = item.get('id')
-            try:
-                producto = Productos.objects.select_for_update().get(pk=producto_id)
-            except Productos.DoesNotExist:
-                return JsonResponse({'status': 'error', 'message': f"Producto con ID '{producto_id}' no encontrado"}, status=400)
-
-            cantidad = int(item.get('cantidad', 0))
-            precio = Decimal(str(item.get('precio', '0.00')))
-
-            if cantidad <= 0 or precio <= 0:
-                return JsonResponse({'status': 'error', 'message': 'Cantidad o precio inválidos'}, status=400)
-
-            # Stock validado y descontado automáticamente en models.save()
-            DetalleVenta.objects.create(
-                ventas=venta,
-                productos=producto,
-                cantidad=cantidad,
-                precio_unitario=precio,
-                descuento_pct=item.get('descuento_pct'),
-            )
-
-        # Recalcular totales usando método del modelo
-        venta.recalcular_totales()
-
-        # Si es pago completo:
-        if data.get('pago_completo', True):
-            venta.monto_pagado = venta.total_con_iva
-            venta.vuelto = Decimal('0.00')
-            venta.save(update_fields=['monto_pagado', 'vuelto'])
 
         return JsonResponse({'status': 'success', 'venta_id': venta.id})
 
-    # Método GET: pasar productos al POS
-    productos = Productos.objects.filter(eliminado__isnull=True).only('id', 'nombre', 'precio')
+    # GET → mostrar formulario con productos y clientes
+    productos = Productos.objects.all()
     productos_json = serialize('json', productos, fields=('id', 'nombre', 'precio'))
-    return render(request, 'ventas/form.html', {'productos_json': productos_json})
 
+    clientes = Clientes.objects.all()
+
+    return render(request, 'ventas/form.html', {
+        'productos_json': productos_json,
+        'clientes': clientes
+    })
+
+# -------------------------
+# Lista clientes (para modal)
+# ------------------------- 
 def lista_clientes(request):
-    return HttpResponse("Lista de clientes (placeholder)")
+    if request.method == "POST":
+        form = ClienteForm(request.POST)
+        if form.is_valid():
+            form.save()  # Guarda en la base de datos
+            return redirect('lista_clientes')  # Recarga la misma página para actualizar la lista
+    else:
+        form = ClienteForm()
+
+    clientes = Clientes.objects.all()
+    return render(request, "ventas/clientes_list.html", {
+        "clientes": clientes,
+        "form": form
+    })
 
 # -------------------------
 # Lista ventas

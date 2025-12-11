@@ -4,25 +4,12 @@
 const CLP = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
 const numCL = new Intl.NumberFormat('es-CL');
 
-// Función para mostrar notificaciones
-function mostrarNotificacion(titulo, mensaje, tipo = 'info') {
-    Swal.fire({
-        title: titulo,
-        text: mensaje,
-        icon: tipo, // 'success', 'error', 'warning', 'info'
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: '#0d6efd',
-        allowOutsideClick: false,
-        allowEscapeKey: true
-    });
-}
-
 function clamp(n, min, max) {
-    return Math.max(min, Math.min(max, n));
+  return Math.max(min, Math.min(max, n));
 }
 
 // =========================
-// Datos embebidos (NORMALIZADOS)
+// Datos embebidos
 // =========================
 const productosDataElement = document.getElementById("productos-data");
 const rawProductos = JSON.parse(productosDataElement.textContent);
@@ -189,26 +176,29 @@ function calcularTotales() {
     document.getElementById("iva").textContent = numCL.format(iva);
     document.getElementById("total").textContent = numCL.format(total);
 }
-document.getElementById("metodoPago").onchange = actualizarCamposPago;
 
-function actualizarCamposPago(){
+// =========================
+// Método de pago (UI)
+// =========================
+document.getElementById("metodoPago").onchange = actualizarCamposPago;
+function actualizarCamposPago() {
     const metodo = this.value;
 
     // ✔ Campos disponibles
     const campos = {
         efectivo: document.getElementById("montoEfectivo"),
-        debito:   document.getElementById("montoDebito"),
-        credito:  document.getElementById("montoCredito")
+        debito: document.getElementById("montoDebito"),
+        credito: document.getElementById("montoCredito")
     };
 
     // ✔ Oculta todos
-    Object.values(campos).forEach(c=>c.classList.add("d-none"));
+    Object.values(campos).forEach(c => c.classList.add("d-none"));
 
     // ✔ Muestra según método
-    if(metodo=="efectivo") campos.efectivo.classList.remove("d-none");
-    if(metodo=="debito")   campos.debito.classList.remove("d-none");
-    if(metodo=="credito")  campos.credito.classList.remove("d-none");
-    if(metodo=="mixto")    Object.values(campos).forEach(c=>c.classList.remove("d-none"));
+    if (metodo === "efectivo") campos.efectivo.classList.remove("d-none");
+    if (metodo === "debito") campos.debito.classList.remove("d-none");
+    if (metodo === "credito") campos.credito.classList.remove("d-none");
+    if (metodo === "mixto") Object.values(campos).forEach(c => c.classList.remove("d-none"));
 }
 actualizarCamposPago();
 
@@ -237,10 +227,20 @@ document.getElementById("btnPagar").onclick = () => {
         mostrarNotificacion("Carrito Vacío", "Agrega productos al carrito antes de pagar.", "warning");
         return;
     }
-    
+
+    // Obtener cliente seleccionado
+    const clienteSelect = document.getElementById("cliente");
+    const clienteId = clienteSelect.value;
+    if (!clienteId) {
+        mostrarNotificacion("Error", "Debes seleccionar un cliente antes de pagar.", "error");
+        return;
+    }
+
     const data = {
         carrito: carrito,
-        cliente_id: 1 // Cliente "Varios"
+        cliente_id: clienteId,
+        pago_completo: true, // si quieres asumir pago completo
+        folio: "F001" // o tu lógica para generar folio dinámico
     };
 
     fetch(crearVentaUrl, {
@@ -255,14 +255,9 @@ document.getElementById("btnPagar").onclick = () => {
         const contentType = response.headers.get('content-type') || '';
         if (!response.ok) {
             if (contentType.includes('application/json')) {
-                return response.json().then(err => {
-                    throw new Error(err.message || 'Error desconocido');
-                });
+                return response.json().then(err => { throw new Error(err.message || 'Error desconocido'); });
             } else {
-                return response.text().then(txt => {
-                    console.error('Server error:', txt);
-                    throw new Error('Respuesta inesperada del servidor');
-                });
+                return response.text().then(txt => { throw new Error('Respuesta inesperada del servidor'); });
             }
         }
         return response.json();

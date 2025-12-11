@@ -37,6 +37,17 @@
 
   <hr>
 
+  <!-- Selección de cliente -->
+  <div class="mb-3">
+    <label for="cliente" class="form-label">Cliente</label>
+    <select id="cliente" name="cliente" class="form-select" required>
+      <option value="">-- Selecciona un cliente --</option>
+      {% for cliente in clientes %}
+        <option value="{{ cliente.id }}">{{ cliente.nombre }}{% if cliente.rut %} ({{ cliente.rut }}){% endif %}</option>
+      {% endfor %}
+    </select>
+  </div>
+
   <!-- Carrito -->
   <h5><i class="bi bi-cart2"></i> Carrito</h5>
   <div class="table-responsive">
@@ -93,9 +104,10 @@
         <input type="number" class="form-control" placeholder="Monto crédito">
       </div>
 
+      <!-- Botón pagar -->
       <div class="text-end">
         <button id="btnPagar" class="btn btn-success btn-lg">
-          <i class="bi bi-cash"></i> Pagar
+          <i class="bi bi-cash"></i>&nbsp;Pagar
         </button>
       </div>
     </div>
@@ -107,11 +119,6 @@
 <script id="productos-data" type="application/json">
   {{ productos_json|safe }}
 </script>
-
-<!-- URLs para JavaScript -->
-<script id="ventas-js" 
-        data-url-crear-venta="{% url 'crear_venta' %}"
-        data-url-lista-ventas="{% url 'lista_ventas' %}"></script>
 
 <!-- JS ventas -->
 <script src="{% static 'js/ventas.js' %}"></script>
