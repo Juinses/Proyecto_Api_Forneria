@@ -4,7 +4,6 @@ import json
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
-from django.db.models import F
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -12,6 +11,7 @@ from django.core.serializers import serialize
 
 from .models import Ventas, Clientes, DetalleVenta
 from apps.inventario.models import Productos
+
 
 # -------------------------
 # Roles
@@ -22,72 +22,76 @@ def es_vendedor(user):
 def es_admin(user):
     return user.is_authenticated and user.is_superuser
 
+
 # -------------------------
-# Home Ventas
+# Home
 # -------------------------
 @login_required
 def ventas_home(request):
     return render(request, 'ventas/home.html')
 
+
 # -------------------------
-# Crear Venta (POST JSON)
+# Crear Venta (JSON)
 # -------------------------
 @login_required
 @user_passes_test(lambda u: es_vendedor(u) or es_admin(u))
 @transaction.atomic
 def crear_venta(request):
     if request.method == 'POST':
+        # Leer JSON del POS
         try:
-            data = json.loads(request.body.decode('utf-8'))
-        except json.JSONDecodeError:
+            data = json.loads(request.body)
+        except Exception:
             return JsonResponse({'status': 'error', 'message': 'JSON inválido'}, status=400)
 
-        cliente_id = data.get('cliente_id') or 1  # Cliente "Varios" por defecto
+        cliente_id = data.get('cliente_id', 1)  # Cliente default "Varios"
         carrito = data.get('carrito', [])
 
         if not carrito:
             return JsonResponse({'status': 'error', 'message': 'El carrito está vacío'}, status=400)
 
-        cliente = get_object_or_404(Clientes, pk=cliente_id)
+        # Obtener o crear cliente por defecto
+        cliente, _ = Clientes.objects.get_or_create(
+            pk=cliente_id,
+            defaults={'nombre': 'Varios', 'rut': None}
+        )
 
-        # Crear venta base
+        # Crear venta inicial (totales en 0, luego se recalculan con el modelo)
         venta = Ventas.objects.create(
             clientes=cliente,
             descuento=Decimal('0.00'),
             canal_venta=data.get('canal_venta', 'TIENDA'),
-            folio=data.get('folio')
+            folio=data.get('folio'),
         )
 
+        # Crear detalle producto x producto
         for item in carrito:
+            producto_id = item.get('id')
             try:
-                producto = Productos.objects.select_for_update().get(pk=item.get('id'))
-                cantidad = int(item.get('cantidad', 0))
-                precio = Decimal(str(item.get('precio', '0.00')))
-            except (Productos.DoesNotExist, TypeError, ValueError):
-                return JsonResponse({'status': 'error', 'message': 'Producto o cantidad/precio inválidos'}, status=400)
+                producto = Productos.objects.select_for_update().get(pk=producto_id)
+            except Productos.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': f"Producto con ID '{producto_id}' no encontrado"}, status=400)
 
-            if cantidad <= 0 or precio < 0:
-                return JsonResponse({'status': 'error', 'message': 'Cantidad/precio inválidos'}, status=400)
+            cantidad = int(item.get('cantidad', 0))
+            precio = Decimal(str(item.get('precio', '0.00')))
 
-            if cantidad > (producto.stock_actual or 0):
-                return JsonResponse(
-                    {'status': 'error', 'message': f"Stock insuficiente para {producto.nombre}"},
-                    status=400
-                )
+            if cantidad <= 0 or precio <= 0:
+                return JsonResponse({'status': 'error', 'message': 'Cantidad o precio inválidos'}, status=400)
 
+            # Stock validado y descontado automáticamente en models.save()
             DetalleVenta.objects.create(
                 ventas=venta,
                 productos=producto,
                 cantidad=cantidad,
                 precio_unitario=precio,
-                descuento_pct=item.get('descuento_pct')
+                descuento_pct=item.get('descuento_pct'),
             )
 
-            producto.stock_actual = F('stock_actual') - cantidad
-            producto.save(update_fields=['stock_actual'])
+        # Recalcular totales usando método del modelo
+        venta.recalcular_totales()
 
-        venta.recalcular_totales(iva_pct=Decimal('0.19'))
-
+        # Si es pago completo:
         if data.get('pago_completo', True):
             venta.monto_pagado = venta.total_con_iva
             venta.vuelto = Decimal('0.00')
@@ -95,28 +99,25 @@ def crear_venta(request):
 
         return JsonResponse({'status': 'success', 'venta_id': venta.id})
 
-    # GET: render con productos disponibles
-    productos = Productos.objects.filter(stock_actual__gt=0).only('id', 'nombre', 'precio')
-    productos_json = json.dumps([
-    {
-        'id': p.id,
-        'nombre': p.nombre,
-        'precio': float(p.precio)
-    } for p in productos
-    ])
+    # Método GET: pasar productos al POS
+    productos = Productos.objects.filter(eliminado__isnull=True).only('id', 'nombre', 'precio')
+    productos_json = serialize('json', productos, fields=('id', 'nombre', 'precio'))
     return render(request, 'ventas/form.html', {'productos_json': productos_json})
 
+def lista_clientes(request):
+    return HttpResponse("Lista de clientes (placeholder)")
 
 # -------------------------
-# Listar Ventas
+# Lista ventas
 # -------------------------
 @login_required
 def lista_ventas(request):
     ventas = Ventas.objects.select_related('clientes').prefetch_related('detalles').order_by('-fecha')
     return render(request, 'ventas/lista_ventas.html', {'ventas': ventas})
 
+
 # -------------------------
-# Editar Venta (placeholder)
+# Editar venta (simple)
 # -------------------------
 @login_required
 @user_passes_test(lambda u: es_vendedor(u) or es_admin(u))
@@ -125,10 +126,9 @@ def editar_venta(request, venta_id):
     venta = get_object_or_404(Ventas.objects.select_for_update(), pk=venta_id)
 
     if request.method == 'POST':
-        # TODO: Implementar edición con cálculo diferencial de stock
         return redirect('lista_ventas')
 
-    productos = Productos.objects.filter(stock_actual__gt=0).only('id', 'nombre', 'precio')
+    productos = Productos.objects.filter(eliminado__isnull=True).only('id', 'nombre', 'precio')
     productos_json = serialize('json', productos, fields=('id', 'nombre', 'precio'))
 
     detalles = DetalleVenta.objects.filter(ventas=venta).select_related('productos')
@@ -145,8 +145,9 @@ def editar_venta(request, venta_id):
         'carrito_json': json.dumps(carrito)
     })
 
+
 # -------------------------
-# Eliminar Venta
+# Eliminar venta: devolver stock
 # -------------------------
 @login_required
 @user_passes_test(lambda u: es_vendedor(u) or es_admin(u))
@@ -156,9 +157,10 @@ def eliminar_venta(request, venta_id):
     detalles = DetalleVenta.objects.filter(ventas=venta).select_related('productos')
 
     if request.method == 'POST':
-        for detalle in detalles:
-            producto = Productos.objects.select_for_update().get(pk=detalle.productos_id)
-            producto.stock_actual = (producto.stock_actual or 0) + detalle.cantidad
+        # Devolver stock
+        for d in detalles:
+            producto = Productos.objects.select_for_update().get(pk=d.productos_id)
+            producto.stock_actual += d.cantidad
             producto.save(update_fields=['stock_actual'])
 
         venta.delete()
@@ -166,20 +168,19 @@ def eliminar_venta(request, venta_id):
 
     return render(request, 'ventas/confirmar_eliminar.html', {'venta': venta})
 
+
 # -------------------------
-# Comprobante (HTML)
+# Comprobante HTML
 # -------------------------
 @login_required
 def comprobante_html(request, venta_id):
     venta = get_object_or_404(Ventas, pk=venta_id)
     detalles = DetalleVenta.objects.filter(ventas=venta).select_related('productos')
-    return render(request, 'ventas/comprobante.html', {
-        'venta': venta,
-        'detalles': detalles
-    })
+    return render(request, 'ventas/comprobante.html', {'venta': venta, 'detalles': detalles})
+
 
 # -------------------------
-# Comprobante (PDF)
+# Comprobante PDF
 # -------------------------
 @login_required
 def comprobante_pdf(request, venta_id):
@@ -188,20 +189,9 @@ def comprobante_pdf(request, venta_id):
     venta = get_object_or_404(Ventas, pk=venta_id)
     detalles = DetalleVenta.objects.filter(ventas=venta).select_related('productos')
 
-    html_string = render_to_string('ventas/comprobante.html', {
-        'venta': venta,
-        'detalles': detalles
-    })
-    base_url = request.build_absolute_uri('/')
-    pdf_bytes = HTML(string=html_string, base_url=base_url).write_pdf()
+    html_string = render_to_string('ventas/comprobante.html', {'venta': venta, 'detalles': detalles})
+    pdf_bytes = HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf()
 
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename=comprobante_{venta_id}.pdf'
     return response
-
-# -------------------------
-# Lista clientes (opcional)
-# -------------------------
-@login_required
-def lista_clientes(request):
-    return render(request, 'ventas/clientes_list.html')

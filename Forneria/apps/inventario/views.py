@@ -28,6 +28,7 @@ def es_admin(user):
 # HOME
 # ============================================================
 @login_required
+@user_passes_test(lambda u: u.is_superuser, login_url='/')
 def inventario_home(request):
     return render(request, 'inventario/home.html')
 
@@ -36,6 +37,7 @@ def inventario_home(request):
 # PRODUCTOS — LISTADO + FILTROS
 # ============================================================
 @login_required
+@user_passes_test(lambda u: u.is_superuser, login_url='/')
 def lista_productos(request):
     productos = Productos.objects.select_related('categorias').all()
     categorias = Categorias.objects.all()

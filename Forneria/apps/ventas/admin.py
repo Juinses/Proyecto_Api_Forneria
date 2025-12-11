@@ -27,7 +27,7 @@ class VentasAdmin(admin.ModelAdmin):
     ordering = ('-fecha',)
     list_select_related = ('clientes',)
     inlines = [DetalleVentaInline]
-    readonly_fields = ('total_sin_iva', 'total_iva', 'total_con_iva', 'saldo_pendiente')
+    readonly_fields = ('total_sin_iva', 'total_iva', 'total_con_iva')
     autocomplete_fields = ('clientes',)
 
     def save_model(self, request, obj, form, change):

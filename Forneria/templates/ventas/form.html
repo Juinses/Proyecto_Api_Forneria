@@ -108,6 +108,11 @@
   {{ productos_json|safe }}
 </script>
 
+<!-- URLs para JavaScript -->
+<script id="ventas-js" 
+        data-url-crear-venta="{% url 'crear_venta' %}"
+        data-url-lista-ventas="{% url 'lista_ventas' %}"></script>
+
 <!-- JS ventas -->
 <script src="{% static 'js/ventas.js' %}"></script>
 

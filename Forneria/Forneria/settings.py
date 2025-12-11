@@ -134,3 +134,6 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'  # o la página principal
 LOGOUT_REDIRECT_URL = '/login/'
 
+# CSRF configuration
+CSRF_FAILURE_VIEW = 'Forneria.views.csrf_failure'
+

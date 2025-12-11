@@ -84,8 +84,8 @@
 
               <!-- Eliminar -->
               <a href="{% url 'eliminar_producto' p.id %}"
-                 class="btn btn-sm btn-danger"
-                 onclick="return confirm('¿Eliminar este producto?');">
+                 class="btn btn-sm btn-danger btn-eliminar"
+                 data-mensaje="¿Eliminar este producto?">
                 <i class="bi bi-trash"></i>
               </a>
 

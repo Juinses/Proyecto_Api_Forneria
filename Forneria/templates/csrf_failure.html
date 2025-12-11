@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="card border-danger">
+      <div class="card-body">
+        <h4 class="card-title text-danger">Acceso denegado (CSRF)</h4>
+        <p>La verificación CSRF ha fallado. Por seguridad la solicitud fue cancelada.</p>
+        {% if reason %}
+          <pre class="small text-muted">{{ reason }}</pre>
+        {% endif %}
+        <p class="mt-3">Por favor recarga la página e intenta nuevamente. Si el problema persiste, borra las cookies del sitio o usa una ventana privada.</p>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      Swal.fire({
+        icon: 'error',
+        title: 'Acceso denegado',
+        text: 'Ha ocurrido un error de verificación CSRF. Recarga la página e intenta de nuevo.',
+        footer: 'Código de error: 403',
+        confirmButtonText: 'Entendido'
+      });
+    });
+  </script>
+{% endblock %}

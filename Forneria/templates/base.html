@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     {% block styles %}{% endblock %}
   </head>
   <body class="d-flex flex-column">
@@ -86,6 +89,31 @@
             // optionally auto-dismiss after 4 seconds
             setTimeout(()=>{ try{ const bs = bootstrap.Alert.getOrCreateInstance(alertDiv); bs.close(); }catch(e){} }, 4000);
           });
+        });
+
+        // Interceptar botones de eliminar con SweetAlert2
+        document.addEventListener('click', function(e) {
+          const link = e.target.closest('.btn-eliminar');
+          if (link) {
+            e.preventDefault();
+            const href = link.href;
+            const mensaje = link.getAttribute('data-mensaje') || '¿Estás seguro de esta acción?';
+            
+            Swal.fire({
+              title: 'Confirmación',
+              text: mensaje,
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#6c757d',
+              confirmButtonText: 'Sí, eliminar',
+              cancelButtonText: 'Cancelar'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                window.location.href = href;
+              }
+            });
+          }
         });
       </script>
     {% endblock %}
